@@ -38,7 +38,7 @@ kiddo-map/
 │   │   ├── NavigationSheet.js # 导航选择
 │   │   └── FeedbackSheet.js  # 反馈表单
 │   └── data/
-│       └── places.js         # 5 个地点数据
+│       └── places.js         # 亲子地点数据
 ├── public/
 │   └── manifest.json         # PWA 配置
 ├── styles/
