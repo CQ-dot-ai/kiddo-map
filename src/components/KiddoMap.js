@@ -72,17 +72,18 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
       el.style.cssText = `
         cursor: pointer;
         transform-origin: bottom center;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-        animation: float 3s ease-in-out infinite;
-        animation-delay: ${Math.random() * 2}s;
       `;
 
       el.innerHTML = `
-        <div style="
+        <div class="kiddo-pin-inner" style="
           position: relative;
           width: 56px;
           height: 64px;
           filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.2));
+          transform-origin: bottom center;
+          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation: float 3s ease-in-out infinite;
+          animation-delay: ${Math.random() * 2}s;
         ">
           <!-- 图钉底部圆形 -->
           <div style="
@@ -134,10 +135,11 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
       // 点击事件
       el.addEventListener('click', (e) => {
         e.stopPropagation();
+        const inner = el.querySelector('.kiddo-pin-inner');
         // 弹跳动画
-        el.style.transform = 'scale(1.2)';
+        inner.style.transform = 'scale(1.2)';
         setTimeout(() => {
-          el.style.transform = 'scale(1)';
+          inner.style.transform = 'scale(1)';
         }, 200);
         
         // 飞到地点
@@ -152,10 +154,10 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
       });
 
       el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.15)';
+        el.querySelector('.kiddo-pin-inner').style.transform = 'scale(1.15)';
       });
       el.addEventListener('mouseleave', () => {
-        el.style.transform = 'scale(1)';
+        el.querySelector('.kiddo-pin-inner').style.transform = 'scale(1)';
       });
 
       const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
