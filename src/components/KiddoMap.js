@@ -25,6 +25,23 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
       attributionControl: false,
     });
 
+    map.current.addControl(
+      new mapboxgl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+        showUserHeading: true,
+      }),
+      'bottom-right'
+    );
+
+    map.current.addControl(
+      new mapboxgl.NavigationControl({
+        showCompass: false,
+        visualizePitch: false,
+      }),
+      'bottom-right'
+    );
+
     map.current.on('load', () => {
       setMapLoaded(true);
       
@@ -187,4 +204,4 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
   );
 }
 
-const PLACES_FULL_COUNT = 5;
+const PLACES_FULL_COUNT = 20;
