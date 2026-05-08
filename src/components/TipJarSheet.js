@@ -4,28 +4,34 @@ import { Coffee, Heart, MapPin, X, ExternalLink } from 'lucide-react';
 
 const BASE_TIP_LINK = process.env.NEXT_PUBLIC_POLAR_TIP_LINK;
 const TIP_LINKS = {
-  5: process.env.NEXT_PUBLIC_POLAR_TIP_RM_5_LINK,
-  15: process.env.NEXT_PUBLIC_POLAR_TIP_RM_15_LINK,
-  30: process.env.NEXT_PUBLIC_POLAR_TIP_RM_30_LINK,
+  1:
+    process.env.NEXT_PUBLIC_POLAR_TIP_USD_1_LINK ||
+    'https://buy.polar.sh/polar_cl_HrX7CXqzdzs1qNKst2u1MxJTLFVTezbPSrMNw4gevzD',
+  3:
+    process.env.NEXT_PUBLIC_POLAR_TIP_USD_3_LINK ||
+    'https://buy.polar.sh/polar_cl_mxWGdFpAcmGKDrmx7X6SS6Cc4e1rCULkdFSGg3kdQ8r',
+  5:
+    process.env.NEXT_PUBLIC_POLAR_TIP_USD_5_LINK ||
+    'https://buy.polar.sh/polar_cl_wH4USP6fxaGTyxY9ZGjdSbHkoOvm4QnTj8FgJ3cvPz0',
 };
 
 const TIP_OPTIONS = [
   {
-    amount: 5,
+    amount: 1,
     icon: Coffee,
-    label: 'Keep Kiddo Map alive',
+    label: 'Tiny high five',
     tone: '#FF8A65',
   },
   {
-    amount: 15,
+    amount: 3,
     icon: MapPin,
-    label: 'Help me add more places',
+    label: 'Buy me a KL coffee',
     tone: '#64B5F6',
   },
   {
-    amount: 30,
+    amount: 5,
     icon: Heart,
-    label: 'You are a hero',
+    label: 'Help add more kid spots',
     tone: '#9575CD',
   },
 ];
@@ -41,7 +47,7 @@ function buildTipUrl(amount) {
     url.searchParams.set('amount', String(amount));
     url.searchParams.set('utm_source', 'kiddo_map');
     url.searchParams.set('utm_medium', 'tip_jar');
-    url.searchParams.set('utm_campaign', `rm_${amount}`);
+    url.searchParams.set('utm_campaign', `usd_${amount}`);
     return url.toString();
   } catch {
     return link;
@@ -180,7 +186,7 @@ export default function TipJarSheet({ onClose }) {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '16px', fontWeight: 900 }}>
-                    RM {option.amount}
+                    ${option.amount}
                   </div>
                   <div style={{ fontSize: '13px', color: '#777', fontWeight: 700 }}>
                     {option.label}
