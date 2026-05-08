@@ -17,7 +17,7 @@ export default function NavigationSheet({ place, onClose }) {
 
   return (
     <>
-      {/* 遮罩 */}
+      {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -33,7 +33,7 @@ export default function NavigationSheet({ place, onClose }) {
         }}
       />
 
-      {/* 选择面板 */}
+      {/* Navigation panel */}
       <motion.div
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
@@ -52,7 +52,7 @@ export default function NavigationSheet({ place, onClose }) {
           paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
         }}
       >
-        {/* 拖动条 */}
+        {/* Handle */}
         <div style={{
           width: '40px',
           height: '4px',
@@ -61,7 +61,7 @@ export default function NavigationSheet({ place, onClose }) {
           margin: '0 auto 20px',
         }} />
 
-        {/* 标题 */}
+        {/* Title */}
         <div style={{
           textAlign: 'center',
           marginBottom: '24px',
@@ -79,18 +79,18 @@ export default function NavigationSheet({ place, onClose }) {
             color: 'var(--charcoal)',
             marginBottom: '4px',
           }}>
-            选择导航 app
+            Pick a map app
           </div>
           <div style={{
             fontSize: '13px',
             color: '#999',
             fontWeight: 500,
           }}>
-            前往 {place.name}
+            Go to {place.nameEn || place.name}
           </div>
         </div>
 
-        {/* 选项 */}
+        {/* Options */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {/* Google Maps */}
           <button
@@ -127,7 +127,7 @@ export default function NavigationSheet({ place, onClose }) {
                 Google Maps
               </div>
               <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>
-                熟悉好用，公共交通最全
+                Easy, familiar, and good for transit too
               </div>
             </div>
             <div style={{ fontSize: '20px' }}>→</div>
@@ -168,13 +168,13 @@ export default function NavigationSheet({ place, onClose }) {
                 Waze
               </div>
               <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>
-                实时路况，KL 司机首选
+                Live traffic, great for driving in KL
               </div>
             </div>
             <div style={{ fontSize: '20px' }}>→</div>
           </button>
 
-          {/* 取消 */}
+          {/* Cancel */}
           <button
             onClick={onClose}
             className="bouncy-button"
@@ -191,7 +191,7 @@ export default function NavigationSheet({ place, onClose }) {
               marginTop: '4px',
             }}
           >
-            取消
+            Cancel
           </button>
         </div>
       </motion.div>
