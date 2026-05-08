@@ -1,0 +1,24 @@
+{
+  "name": "kiddo-map",
+  "version": "1.0.0",
+  "description": "Kiddo Map - 吉隆坡童游地图，3 分钟决定带娃去哪儿",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "mapbox-gl": "3.4.0",
+    "framer-motion": "11.3.8",
+    "lucide-react": "0.408.0"
+  },
+  "devDependencies": {
+    "eslint": "8.57.0",
+    "eslint-config-next": "14.2.5"
+  }
+}
