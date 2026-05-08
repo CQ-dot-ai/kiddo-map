@@ -9,35 +9,67 @@ const FEEDBACK_TYPES = [
   { id: 'place', emoji: '📍', label: '推荐地点' },
 ];
 
+const GOOGLE_FORM_ID = process.env.NEXT_PUBLIC_GOOGLE_FORM_ID;
+const ENTRY_TYPE = process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_TYPE;
+const ENTRY_MESSAGE = process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_MESSAGE;
+const ENTRY_NAME = process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_NAME;
+const ENTRY_PAGE = process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_PAGE;
+
 export default function FeedbackSheet({ onClose }) {
   const [type, setType] = useState('love');
   const [message, setMessage] = useState('');
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [savedRemotely, setSavedRemotely] = useState(false);
+
+  const canSubmitToGoogleForm =
+    GOOGLE_FORM_ID &&
+    ENTRY_TYPE &&
+    ENTRY_MESSAGE &&
+    ENTRY_NAME;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    setSubmitting(true);
-    
-    // 模拟提交（你可以集成 Google Form 或后端）
-    // 临时方案：保存到 localStorage，让你可以查看
     const feedback = {
       type,
       message,
       name: name || '匿名',
+      page: typeof window !== 'undefined' ? window.location.href : '',
       timestamp: new Date().toISOString(),
     };
-    
-    const existing = JSON.parse(localStorage.getItem('kiddo-feedback') || '[]');
-    existing.push(feedback);
-    localStorage.setItem('kiddo-feedback', JSON.stringify(existing));
-    
-    // 在控制台打印（你可以在 Vercel logs 中看到）
-    console.log('📬 New Feedback:', feedback);
-    
+
+    setSubmitting(true);
+
+    try {
+      if (canSubmitToGoogleForm) {
+        const body = new FormData();
+        body.append(ENTRY_TYPE, FEEDBACK_TYPES.find(t => t.id === type)?.label || type);
+        body.append(ENTRY_MESSAGE, feedback.message);
+        body.append(ENTRY_NAME, feedback.name);
+        if (ENTRY_PAGE) body.append(ENTRY_PAGE, feedback.page);
+
+        await fetch(`https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/formResponse`, {
+          method: 'POST',
+          mode: 'no-cors',
+          body,
+        });
+        setSavedRemotely(true);
+      } else {
+        const existing = JSON.parse(localStorage.getItem('kiddo-feedback') || '[]');
+        existing.push(feedback);
+        localStorage.setItem('kiddo-feedback', JSON.stringify(existing));
+        setSavedRemotely(false);
+      }
+    } catch (error) {
+      const existing = JSON.parse(localStorage.getItem('kiddo-feedback') || '[]');
+      existing.push(feedback);
+      localStorage.setItem('kiddo-feedback', JSON.stringify(existing));
+      setSavedRemotely(false);
+    }
+
     await new Promise(r => setTimeout(r, 800));
     setSubmitting(false);
     setSubmitted(true);
@@ -121,7 +153,7 @@ export default function FeedbackSheet({ onClose }) {
               color: '#999',
               fontWeight: 500,
             }}>
-              我们会认真看每一条 💛
+              {savedRemotely ? '已经收到，我们会认真看每一条 💛' : '已先保存在本机，配置 Google Form 后就能自动收集'}
             </div>
           </div>
         ) : (
