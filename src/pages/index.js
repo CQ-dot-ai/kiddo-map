@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare } from 'lucide-react';
+import { X, MessageSquare, Coffee } from 'lucide-react';
 import { PLACES, FILTERS } from '../data/places';
 
 // Mapbox 必须在客户端渲染
@@ -10,12 +10,14 @@ const KiddoMap = dynamic(() => import('../components/KiddoMap'), { ssr: false })
 const PlaceDetail = dynamic(() => import('../components/PlaceDetail'), { ssr: false });
 const NavigationSheet = dynamic(() => import('../components/NavigationSheet'), { ssr: false });
 const FeedbackSheet = dynamic(() => import('../components/FeedbackSheet'), { ssr: false });
+const TipJarSheet = dynamic(() => import('../components/TipJarSheet'), { ssr: false });
 
 export default function Home() {
   const [filter, setFilter] = useState('all');
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [navPlace, setNavPlace] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showTipJar, setShowTipJar] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [showInstallHint, setShowInstallHint] = useState(false);
 
@@ -139,29 +141,58 @@ export default function Home() {
               </div>
             </div>
 
-            <button
-              onClick={() => setShowFeedback(true)}
-              className="bouncy-button"
-              style={{
-                background: 'linear-gradient(135deg, #FF8A65, #FFD54F)',
-                border: 'none',
-                borderRadius: '14px',
-                padding: '10px 14px',
-                color: 'white',
-                fontSize: '13px',
-                fontWeight: 700,
-                fontFamily: 'Nunito, sans-serif',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                boxShadow: '0 4px 12px rgba(255, 138, 101, 0.3)',
-                pointerEvents: 'auto',
-              }}
-            >
-              <MessageSquare size={14} strokeWidth={3} />
-              反馈
-            </button>
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              alignItems: 'center',
+              pointerEvents: 'auto',
+            }}>
+              <button
+                onClick={() => setShowTipJar(true)}
+                className="bouncy-button"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  border: 'none',
+                  borderRadius: '14px',
+                  padding: '10px 12px',
+                  color: 'var(--charcoal)',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  fontFamily: 'Nunito, sans-serif',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                }}
+              >
+                <Coffee size={14} strokeWidth={3} />
+                支持
+              </button>
+
+              <button
+                onClick={() => setShowFeedback(true)}
+                className="bouncy-button"
+                style={{
+                  background: 'linear-gradient(135deg, #FF8A65, #FFD54F)',
+                  border: 'none',
+                  borderRadius: '14px',
+                  padding: '10px 14px',
+                  color: 'white',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  fontFamily: 'Nunito, sans-serif',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  boxShadow: '0 4px 12px rgba(255, 138, 101, 0.3)',
+                }}
+              >
+                <MessageSquare size={14} strokeWidth={3} />
+                反馈
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -322,6 +353,13 @@ export default function Home() {
         <AnimatePresence>
           {showFeedback && (
             <FeedbackSheet onClose={() => setShowFeedback(false)} />
+          )}
+        </AnimatePresence>
+
+        {/* 赞赏 */}
+        <AnimatePresence>
+          {showTipJar && (
+            <TipJarSheet onClose={() => setShowTipJar(false)} />
           )}
         </AnimatePresence>
       </div>
