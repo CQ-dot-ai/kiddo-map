@@ -1,0 +1,18 @@
+{
+  "name": "Kiddo Map · 吉隆坡童游地图",
+  "short_name": "Kiddo Map",
+  "description": "3 分钟决定带娃去哪儿，一键导航出发",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF8E7",
+  "theme_color": "#FF8A65",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
