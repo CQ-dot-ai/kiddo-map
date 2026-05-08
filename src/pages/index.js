@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, X, Navigation, Star, Clock, MapPin, MessageSquare } from 'lucide-react';
+import { X, MessageSquare } from 'lucide-react';
 import { PLACES, FILTERS } from '../data/places';
 
 // Mapbox 必须在客户端渲染
@@ -48,7 +48,6 @@ export default function Home() {
     if (filter === 'all') return PLACES;
     if (filter === 'indoor') return PLACES.filter(p => p.indoor);
     if (filter === 'outdoor') return PLACES.filter(p => !p.indoor);
-    if (filter === 'cheap') return PLACES.filter(p => p.cost < 50);
     if (filter === 'favorites') return PLACES.filter(p => favorites.includes(p.id));
     return PLACES;
   }, [filter, favorites]);
@@ -73,7 +72,7 @@ export default function Home() {
           onPinClick={setSelectedPlace}
         />
 
-        {/* 顶部品牌栏 */}
+        {/* 顶部品牌与反馈 */}
         <motion.div
           initial={{ y: -100 }}
           animate={{ y: 0 }}
@@ -86,20 +85,27 @@ export default function Home() {
             zIndex: 10,
             padding: '14px 16px',
             paddingTop: 'max(14px, env(safe-area-inset-top))',
+            pointerEvents: 'none',
           }}
         >
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            padding: '12px 18px',
-            borderRadius: '20px',
-            boxShadow: 'var(--shadow-soft)',
+            gap: '12px',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              padding: '10px 14px',
+              borderRadius: '20px',
+              boxShadow: 'var(--shadow-soft)',
+              pointerEvents: 'auto',
+            }}>
               <div style={{
                 width: '40px',
                 height: '40px',
@@ -150,6 +156,7 @@ export default function Home() {
                 alignItems: 'center',
                 gap: '4px',
                 boxShadow: '0 4px 12px rgba(255, 138, 101, 0.3)',
+                pointerEvents: 'auto',
               }}
             >
               <MessageSquare size={14} strokeWidth={3} />
@@ -158,14 +165,14 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* 筛选条 */}
+        {/* 顶部筛选条 */}
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
+          initial={{ y: -80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', damping: 20, delay: 0.2 }}
           style={{
             position: 'absolute',
-            bottom: 'max(20px, env(safe-area-inset-bottom))',
+            top: 'max(86px, calc(env(safe-area-inset-top) + 86px))',
             left: 0,
             right: 0,
             zIndex: 10,
@@ -190,7 +197,7 @@ export default function Home() {
                   onClick={() => setFilter(f.id)}
                   className="bouncy-button"
                   style={{
-                    padding: '11px 18px',
+                    padding: '12px 20px',
                     borderRadius: '999px',
                     border: 'none',
                     background: isActive 
@@ -198,7 +205,7 @@ export default function Home() {
                       : 'rgba(255, 255, 255, 0.95)',
                     color: isActive ? 'white' : 'var(--charcoal)',
                     fontWeight: 700,
-                    fontSize: '14px',
+                    fontSize: '17px',
                     fontFamily: 'Nunito, sans-serif',
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
@@ -210,7 +217,7 @@ export default function Home() {
                     flexShrink: 0,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '5px',
+                    gap: '8px',
                   }}
                 >
                   <span>{f.emoji}</span>
