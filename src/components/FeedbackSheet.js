@@ -9,11 +9,21 @@ const FEEDBACK_TYPES = [
   { id: 'place', emoji: '📍', label: '推荐地点' },
 ];
 
-const GOOGLE_FORM_ID = process.env.NEXT_PUBLIC_GOOGLE_FORM_ID;
-const ENTRY_TYPE = process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_TYPE;
-const ENTRY_MESSAGE = process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_MESSAGE;
-const ENTRY_NAME = process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_NAME;
-const ENTRY_PAGE = process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_PAGE;
+const GOOGLE_FORM_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_FORM_ID ||
+  '1FAIpQLSdiKq6MKCYQWvij-IAx3-0Kyuae8PSK5DANl11a9_YMfF9fMg';
+const ENTRY_TYPE =
+  process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_TYPE ||
+  'entry.557060399';
+const ENTRY_MESSAGE =
+  process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_MESSAGE ||
+  'entry.1613779212';
+const ENTRY_NAME =
+  process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_NAME ||
+  'entry.2096659761';
+const ENTRY_PAGE =
+  process.env.NEXT_PUBLIC_GOOGLE_FORM_ENTRY_PAGE ||
+  'entry.868558333';
 
 export default function FeedbackSheet({ onClose }) {
   const [type, setType] = useState('love');
