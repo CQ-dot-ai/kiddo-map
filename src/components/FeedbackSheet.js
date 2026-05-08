@@ -3,11 +3,11 @@ import { motion } from 'framer-motion';
 import { X, Send } from 'lucide-react';
 
 const RATING_OPTIONS = [
-  { id: '5', emoji: '⭐⭐⭐⭐⭐', label: 'Love it', formValue: '⭐⭐⭐⭐⭐ 超喜欢' },
-  { id: '4', emoji: '⭐⭐⭐⭐', label: 'Pretty good', formValue: '⭐⭐⭐⭐ 还不错' },
-  { id: '3', emoji: '⭐⭐⭐', label: 'It is okay', formValue: '⭐⭐⭐ 一般般' },
-  { id: '2', emoji: '⭐⭐', label: 'Not great', formValue: '⭐⭐ 不太行' },
-  { id: '1', emoji: '⭐', label: 'Not useful', formValue: '⭐ 没用' },
+  { id: '5', emoji: '⭐⭐⭐⭐⭐', label: 'Love it', formValue: '⭐⭐⭐⭐⭐ Love it' },
+  { id: '4', emoji: '⭐⭐⭐⭐', label: 'Pretty good', formValue: '⭐⭐⭐⭐ Pretty good' },
+  { id: '3', emoji: '⭐⭐⭐', label: 'It is okay', formValue: '⭐⭐⭐ It is okay' },
+  { id: '2', emoji: '⭐⭐', label: 'Not great', formValue: '⭐⭐ Not quite right' },
+  { id: '1', emoji: '⭐', label: 'Not useful', formValue: '⭐ Not useful yet' },
 ];
 
 const GOOGLE_FORM_ID =
