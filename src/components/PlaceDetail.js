@@ -4,7 +4,7 @@ import { X, Heart, Navigation, Star, Clock, Users, DollarSign } from 'lucide-rea
 export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClose, onNavigate }) {
   return (
     <>
-      {/* 黑色遮罩 */}
+      {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -20,7 +20,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
         }}
       />
 
-      {/* 详情面板 */}
+      {/* Detail panel */}
       <motion.div
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
@@ -42,17 +42,17 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
           boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.2)',
         }}
       >
-        {/* 顶部图片 + 关闭按钮 */}
+        {/* Top image and close button */}
         <div style={{
           position: 'relative',
           height: '220px',
           background: `linear-gradient(135deg, ${place.color.primary}, ${place.color.dark})`,
           flexShrink: 0,
         }}>
-          {/* 图片 */}
+          {/* Image */}
           <img
             src={place.image}
-            alt={place.name}
+            alt={place.nameEn || place.name}
             style={{
               width: '100%',
               height: '100%',
@@ -62,14 +62,14 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
             onError={(e) => { e.target.style.display = 'none'; }}
           />
           
-          {/* 渐变遮罩 */}
+          {/* Gradient overlay */}
           <div style={{
             position: 'absolute',
             inset: 0,
             background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%)',
           }} />
 
-          {/* 顶部操作 */}
+          {/* Top actions */}
           <div style={{
             position: 'absolute',
             top: '16px',
@@ -78,7 +78,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
             display: 'flex',
             justifyContent: 'space-between',
           }}>
-            {/* 拖动条 */}
+            {/* Handle */}
             <div style={{
               position: 'absolute',
               top: '-8px',
@@ -90,7 +90,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
               borderRadius: '999px',
             }} />
             
-            {/* 类别标签 */}
+            {/* Category */}
             <div style={{
               background: 'rgba(255, 255, 255, 0.95)',
               color: place.color.dark,
@@ -103,7 +103,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
               {place.emoji} {place.category}
             </div>
 
-            {/* 关闭按钮 */}
+            {/* Close button */}
             <button
               onClick={onClose}
               className="bouncy-button"
@@ -125,7 +125,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
             </button>
           </div>
 
-          {/* 名字 */}
+          {/* Name */}
           <div style={{
             position: 'absolute',
             bottom: '20px',
@@ -150,12 +150,12 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
               margin: 0,
               textShadow: '0 2px 6px rgba(0,0,0,0.3)',
             }}>
-              {place.name}
+              {place.nameEn || place.name}
             </h2>
           </div>
         </div>
 
-        {/* 可滚动内容 */}
+        {/* Scrollable content */}
         <div
           className="hide-scrollbar"
           style={{
@@ -165,7 +165,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
             paddingBottom: '120px',
           }}
         >
-          {/* 评分卡 */}
+          {/* Rating cards */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
@@ -202,7 +202,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
             }}>
               <span style={{ fontSize: '18px' }}>👶</span>
               <div>
-                <div style={{ fontSize: '10px', color: '#666', fontWeight: 600 }}>童游评分</div>
+                <div style={{ fontSize: '10px', color: '#666', fontWeight: 600 }}>Kiddo score</div>
                 <div style={{ fontSize: '15px', fontWeight: 800, color: place.color.dark }}>
                   {place.ourRating} <span style={{ fontSize: '10px', color: '#999' }}>/ 5</span>
                 </div>
@@ -210,19 +210,19 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
             </div>
           </div>
 
-          {/* 关键信息 */}
+          {/* Key info */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr 1fr',
             gap: '8px',
             marginBottom: '20px',
           }}>
-            <InfoChip icon={<DollarSign size={14} />} label="价格" value={place.costLabel} color={place.color.dark} />
-            <InfoChip icon={<Clock size={14} />} label="时长" value={`${place.durationHours}h`} color={place.color.dark} />
-            <InfoChip icon={<Users size={14} />} label="适龄" value={`${place.ageMin}-${place.ageMax}岁`} color={place.color.dark} />
+            <InfoChip icon={<DollarSign size={14} />} label="Cost" value={place.costLabel} color={place.color.dark} />
+            <InfoChip icon={<Clock size={14} />} label="Time" value={`${place.durationHours}h`} color={place.color.dark} />
+            <InfoChip icon={<Users size={14} />} label="Age" value={`${place.ageMin}-${place.ageMax}`} color={place.color.dark} />
           </div>
 
-          {/* 描述 */}
+          {/* Description */}
           <div style={{
             background: 'var(--cream)',
             borderRadius: '20px',
@@ -237,7 +237,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
             }}>
-              ✨ 这里有什么好玩的？
+              ✨ Why kids like it
             </div>
             <div style={{
               fontSize: '14px',
@@ -249,7 +249,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
             </div>
           </div>
 
-          {/* 三个亮点 */}
+          {/* Highlights */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{
               fontSize: '11px',
@@ -260,7 +260,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
               letterSpacing: '0.5px',
               padding: '0 4px',
             }}>
-              💡 必看小贴士
+              💡 Tiny parent notes
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {place.highlights.map((h, i) => (
@@ -314,7 +314,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
             </div>
           </div>
 
-          {/* 设施友好度 */}
+          {/* Family facilities */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{
               fontSize: '11px',
@@ -325,7 +325,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
               letterSpacing: '0.5px',
               padding: '0 4px',
             }}>
-              🏠 家长友好度
+              🏠 Parent-friendly bits
             </div>
             <div style={{
               background: 'white',
@@ -336,16 +336,16 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '14px',
             }}>
-              <FacilityItem emoji="👶" label="婴儿车" level={place.facilities.stroller} color={place.color.dark} />
-              <FacilityItem emoji="🍼" label="哺乳室" level={place.facilities.nursing} color={place.color.dark} />
-              <FacilityItem emoji="🚼" label="尿布台" level={place.facilities.diaper} color={place.color.dark} />
-              <FacilityItem emoji="❄️" label="冷气" level={place.facilities.aircon} color={place.color.dark} />
-              <FacilityItem emoji="🍽️" label="餐饮" level={place.facilities.food} color={place.color.dark} />
-              <FacilityItem emoji="🚻" label="厕所" level={place.facilities.restroom} color={place.color.dark} />
+              <FacilityItem emoji="👶" label="Stroller" level={place.facilities.stroller} color={place.color.dark} />
+              <FacilityItem emoji="🍼" label="Nursing" level={place.facilities.nursing} color={place.color.dark} />
+              <FacilityItem emoji="🚼" label="Diaper" level={place.facilities.diaper} color={place.color.dark} />
+              <FacilityItem emoji="❄️" label="A/C" level={place.facilities.aircon} color={place.color.dark} />
+              <FacilityItem emoji="🍽️" label="Food" level={place.facilities.food} color={place.color.dark} />
+              <FacilityItem emoji="🚻" label="Toilets" level={place.facilities.restroom} color={place.color.dark} />
             </div>
           </div>
 
-          {/* 地址 */}
+          {/* Address */}
           <div style={{
             display: 'flex',
             alignItems: 'flex-start',
@@ -362,7 +362,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
           </div>
         </div>
 
-        {/* 底部固定按钮 */}
+        {/* Fixed bottom buttons */}
         <div style={{
           position: 'absolute',
           bottom: 0,
@@ -423,7 +423,7 @@ export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClo
             }}
           >
             <Navigation size={18} strokeWidth={3} />
-            一键导航前往
+            Take me there
           </button>
         </div>
       </motion.div>
