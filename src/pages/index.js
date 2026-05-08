@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Coffee } from 'lucide-react';
 import { PLACES, FILTERS } from '../data/places';
 
-// Mapbox 必须在客户端渲染
+// Mapbox must render on the client.
 const KiddoMap = dynamic(() => import('../components/KiddoMap'), { ssr: false });
 const PlaceDetail = dynamic(() => import('../components/PlaceDetail'), { ssr: false });
 const NavigationSheet = dynamic(() => import('../components/NavigationSheet'), { ssr: false });
@@ -21,12 +21,12 @@ export default function Home() {
   const [favorites, setFavorites] = useState([]);
   const [showInstallHint, setShowInstallHint] = useState(false);
 
-  // 加载本地收藏
+  // Load saved favorites.
   useEffect(() => {
     const saved = localStorage.getItem('kiddo-favorites');
     if (saved) setFavorites(JSON.parse(saved));
     
-    // 检测是否是 iOS Safari 且非 PWA 模式
+    // Show the install hint on iOS Safari when not already installed.
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
     if (isIOS && !isStandalone) {
@@ -34,7 +34,7 @@ export default function Home() {
     }
   }, []);
 
-  // 保存收藏
+  // Save favorites locally.
   useEffect(() => {
     localStorage.setItem('kiddo-favorites', JSON.stringify(favorites));
   }, [favorites]);
@@ -45,7 +45,7 @@ export default function Home() {
     );
   };
 
-  // 过滤地点
+  // Filter places.
   const filteredPlaces = useMemo(() => {
     if (filter === 'all') return PLACES;
     if (filter === 'indoor') return PLACES.filter(p => p.indoor);
@@ -57,8 +57,8 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Kiddo Map · 吉隆坡童游地图</title>
-        <meta name="description" content="3 分钟决定带娃去哪儿，一键导航出发" />
+        <title>Kiddo Map · KL family fun map</title>
+        <meta name="description" content="Pick a kid-friendly KL place in 3 minutes." />
       </Head>
 
       <div style={{
@@ -67,14 +67,14 @@ export default function Home() {
         background: 'var(--cream)',
         overflow: 'hidden',
       }}>
-        {/* 地图作为背景 */}
+        {/* Map background */}
         <KiddoMap
           places={filteredPlaces}
           selectedPlace={selectedPlace}
           onPinClick={setSelectedPlace}
         />
 
-        {/* 顶部品牌与反馈 */}
+        {/* Top brand and actions */}
         <motion.div
           initial={{ y: -100 }}
           animate={{ y: 0 }}
@@ -136,7 +136,7 @@ export default function Home() {
                   color: '#999',
                   marginTop: '3px',
                 }}>
-                  吉隆坡童游 · {filteredPlaces.length} 个去处
+                  KL family fun · {filteredPlaces.length} places
                 </div>
               </div>
             </div>
@@ -167,7 +167,7 @@ export default function Home() {
                 }}
               >
                 <Coffee size={14} strokeWidth={3} />
-                支持
+                Support
               </button>
 
               <button
@@ -190,13 +190,13 @@ export default function Home() {
                 }}
               >
                 <MessageSquare size={14} strokeWidth={3} />
-                反馈
+                Feedback
               </button>
             </div>
           </div>
         </motion.div>
 
-        {/* 顶部筛选条 */}
+        {/* Top filters */}
         <motion.div
           initial={{ y: -80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -272,7 +272,7 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* iOS 安装提示 */}
+        {/* iOS install hint */}
         <AnimatePresence>
           {showInstallHint && (
             <motion.div
@@ -299,9 +299,9 @@ export default function Home() {
             >
               <span style={{ fontSize: '24px' }}>📱</span>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 800, marginBottom: '2px' }}>添加到主屏幕</div>
+                <div style={{ fontWeight: 800, marginBottom: '2px' }}>Add to Home Screen</div>
                 <div style={{ fontSize: '11px', opacity: 0.9 }}>
-                  Safari → 分享 → "添加到主屏幕"
+                  Safari → Share → "Add to Home Screen"
                 </div>
               </div>
               <button
@@ -326,7 +326,7 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* 详情页 */}
+        {/* Place detail */}
         <AnimatePresence>
           {selectedPlace && (
             <PlaceDetail
@@ -339,7 +339,7 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* 导航选择 */}
+        {/* Navigation choices */}
         <AnimatePresence>
           {navPlace && (
             <NavigationSheet
@@ -349,14 +349,14 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* 反馈表单 */}
+        {/* Feedback form */}
         <AnimatePresence>
           {showFeedback && (
             <FeedbackSheet onClose={() => setShowFeedback(false)} />
           )}
         </AnimatePresence>
 
-        {/* 赞赏 */}
+        {/* Tip jar */}
         <AnimatePresence>
           {showTipJar && (
             <TipJarSheet onClose={() => setShowTipJar(false)} />
