@@ -1,0 +1,131 @@
+/* Kiddo Map - 童趣糖果色样式系统 */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600&display=swap');
+
+:root {
+  /* 童趣糖果色 */
+  --coral: #FF8A65;
+  --coral-light: #FFE0B2;
+  --sunshine: #FFD54F;
+  --sunshine-light: #FFF8E1;
+  --mint: #81C784;
+  --mint-light: #E8F5E9;
+  --sky: #64B5F6;
+  --sky-light: #E3F2FD;
+  --lavender: #9575CD;
+  --lavender-light: #EDE7F6;
+  
+  /* 基础色 */
+  --cream: #FFF8E7;
+  --soft-gray: #ECEFF1;
+  --charcoal: #424242;
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --shadow-strong: 0 16px 50px rgba(0, 0, 0, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#__next {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(66, 66, 66, 0.2);
+  border-radius: 999px;
+}
+
+/* Mapbox 自定义样式 */
+.mapboxgl-ctrl-attrib {
+  font-size: 9px !important;
+  background: rgba(255, 248, 231, 0.8) !important;
+}
+
+.mapboxgl-ctrl-logo {
+  display: none !important;
+}
+
+.mapboxgl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.mapboxgl-popup-tip {
+  display: none !important;
+}
+
+.mapboxgl-popup-close-button {
+  display: none !important;
+}
+
+/* 童趣按钮基础样式 */
+.bouncy-button {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.bouncy-button:active {
+  transform: scale(0.94);
+}
+
+/* 卡片基础样式 */
+.candy-card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+/* 隐藏滚动条但保持滚动功能 */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* PWA 安装提示动画 */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
