@@ -18,6 +18,8 @@ export default function Home() {
   const [navPlace, setNavPlace] = useState(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showTipJar, setShowTipJar] = useState(false);
+  const [showFeedbackNudge, setShowFeedbackNudge] = useState(false);
+  const [feedbackNudgeDismissed, setFeedbackNudgeDismissed] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [showInstallHint, setShowInstallHint] = useState(false);
 
@@ -38,6 +40,18 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem('kiddo-favorites', JSON.stringify(favorites));
   }, [favorites]);
+
+  useEffect(() => {
+    setShowFeedbackNudge(false);
+
+    if (!selectedPlace || showFeedback || feedbackNudgeDismissed) return;
+
+    const timer = setTimeout(() => {
+      setShowFeedbackNudge(true);
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [selectedPlace, showFeedback, feedbackNudgeDismissed]);
 
   const toggleFavorite = (placeId) => {
     setFavorites(prev => 
@@ -336,6 +350,47 @@ export default function Home() {
               onClose={() => setSelectedPlace(null)}
               onNavigate={() => setNavPlace(selectedPlace)}
             />
+          )}
+        </AnimatePresence>
+
+        {/* Detail feedback nudge */}
+        <AnimatePresence>
+          {showFeedbackNudge && selectedPlace && !showFeedback && (
+            <motion.button
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.96 }}
+              onClick={() => {
+                setFeedbackNudgeDismissed(true);
+                setShowFeedbackNudge(false);
+                setShowFeedback(true);
+              }}
+              className="bouncy-button"
+              style={{
+                position: 'fixed',
+                left: '18px',
+                right: '18px',
+                bottom: 'max(18px, env(safe-area-inset-bottom))',
+                zIndex: 75,
+                border: 'none',
+                borderRadius: '18px',
+                background: 'linear-gradient(135deg, #FF8A65, #FFD54F)',
+                color: 'white',
+                boxShadow: '0 12px 32px rgba(255, 138, 101, 0.35)',
+                padding: '13px 16px',
+                fontFamily: 'Nunito, sans-serif',
+                fontSize: '14px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <MessageSquare size={16} strokeWidth={3} />
+              Was this useful? Tell us →
+            </motion.button>
           )}
         </AnimatePresence>
 
