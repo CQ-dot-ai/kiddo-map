@@ -13,19 +13,19 @@ const TIP_OPTIONS = [
   {
     amount: 5,
     icon: Coffee,
-    label: '给 Kiddo Map 续命',
+    label: 'Keep Kiddo Map alive',
     tone: '#FF8A65',
   },
   {
     amount: 15,
     icon: MapPin,
-    label: '让我加更多地点',
+    label: 'Help me add more places',
     tone: '#64B5F6',
   },
   {
     amount: 30,
     icon: Heart,
-    label: '你是英雄',
+    label: 'You are a hero',
     tone: '#9575CD',
   },
 ];
@@ -114,10 +114,10 @@ export default function TipJarSheet({ onClose }) {
               color: 'var(--charcoal)',
               marginBottom: '5px',
             }}>
-              喜欢这个 app 吗？
+              Like this little app?
             </div>
             <div style={{ fontSize: '14px', color: '#777', fontWeight: 600 }}>
-              请我一杯 KL 咖啡 ☕
+              Buy me a KL coffee ☕
             </div>
           </div>
           <button
@@ -203,7 +203,7 @@ export default function TipJarSheet({ onClose }) {
             fontWeight: 700,
             lineHeight: 1.5,
           }}>
-            Tip Jar 已放好入口。配置 Polar Checkout Link 后，按钮会直接跳转收款。
+            Tip Jar is ready. Add a Polar Checkout Link and these buttons will start taking tips.
           </div>
         )}
       </motion.div>
