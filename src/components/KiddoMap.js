@@ -193,15 +193,55 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
   }, [mapLoaded, places, onPinClick]);
 
   return (
-    <div
-      ref={mapContainer}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background: '#FFF8E7',
-      }}
-    />
+    <div style={{ position: 'absolute', inset: 0, background: '#FFF8E7' }}>
+      <div
+        ref={mapContainer}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: '#FFF8E7',
+        }}
+      />
+
+      {!mapLoaded && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 2,
+            pointerEvents: 'none',
+            background: 'linear-gradient(180deg, rgba(255,248,231,0.96), rgba(255,248,231,0.68))',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+          }}
+        >
+          <div style={{
+            background: 'rgba(255,255,255,0.94)',
+            borderRadius: '22px',
+            padding: '16px 18px',
+            boxShadow: '0 14px 40px rgba(0,0,0,0.12)',
+            textAlign: 'center',
+            color: 'var(--charcoal)',
+            fontFamily: 'Nunito, sans-serif',
+            fontWeight: 800,
+          }}>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ fontSize: '34px', marginBottom: '6px' }}
+            >
+              🗺️
+            </motion.div>
+            Finding kid-friendly spots...
+          </div>
+        </motion.div>
+      )}
+    </div>
   );
 }
 
-const PLACES_FULL_COUNT = 20;
+const PLACES_FULL_COUNT = 21;
