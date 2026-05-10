@@ -3,7 +3,7 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Coffee } from 'lucide-react';
-import { PLACES, FILTERS } from '../data/places';
+import { PLACES } from '../data/places';
 
 // Mapbox must render on the client.
 const KiddoMap = dynamic(() => import('../components/KiddoMap'), { ssr: false });
@@ -11,6 +11,39 @@ const PlaceDetail = dynamic(() => import('../components/PlaceDetail'), { ssr: fa
 const NavigationSheet = dynamic(() => import('../components/NavigationSheet'), { ssr: false });
 const FeedbackSheet = dynamic(() => import('../components/FeedbackSheet'), { ssr: false });
 const TipJarSheet = dynamic(() => import('../components/TipJarSheet'), { ssr: false });
+
+const QUICK_FILTERS = [
+  { id: 'all', label: 'All', emoji: '🗺️' },
+  { id: 'toddler', label: '0-4', emoji: '🧸' },
+  { id: 'kids', label: '5-9', emoji: '🛝' },
+  { id: 'short', label: '1-2h', emoji: '⏱️' },
+  { id: 'indoor', label: 'Indoor', emoji: '❄️' },
+  { id: 'outdoor', label: 'Outdoor', emoji: '🌳' },
+  { id: 'budget', label: 'Budget', emoji: '💰' },
+  { id: 'favorites', label: 'Saved', emoji: '❤️' },
+];
+
+function maxDurationHours(duration) {
+  const matches = String(duration).match(/\d+/g);
+  if (!matches) return 99;
+  return Math.max(...matches.map(Number));
+}
+
+function decisionScore(place) {
+  const parentEase =
+    place.facilities.stroller +
+    place.facilities.diaper +
+    place.facilities.food +
+    place.facilities.restroom;
+
+  return (
+    place.ourRating * 10 +
+    parentEase +
+    (place.weatherSafe ? 8 : 0) +
+    (maxDurationHours(place.durationHours) <= 3 ? 5 : 0) +
+    (place.cost <= 50 ? 3 : 0)
+  );
+}
 
 export default function Home() {
   const [filter, setFilter] = useState('all');
@@ -22,6 +55,7 @@ export default function Home() {
   const [feedbackNudgeDismissed, setFeedbackNudgeDismissed] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [showInstallHint, setShowInstallHint] = useState(false);
+  const [recommendationIndex, setRecommendationIndex] = useState(0);
 
   // Load saved favorites.
   useEffect(() => {
@@ -40,6 +74,10 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem('kiddo-favorites', JSON.stringify(favorites));
   }, [favorites]);
+
+  useEffect(() => {
+    setRecommendationIndex(0);
+  }, [filter]);
 
   useEffect(() => {
     setShowFeedbackNudge(false);
@@ -62,16 +100,28 @@ export default function Home() {
   // Filter places.
   const filteredPlaces = useMemo(() => {
     if (filter === 'all') return PLACES;
+    if (filter === 'toddler') return PLACES.filter(p => p.ageMin <= 4 && p.ageMax >= 1);
+    if (filter === 'kids') return PLACES.filter(p => p.ageMin <= 9 && p.ageMax >= 5);
+    if (filter === 'short') return PLACES.filter(p => maxDurationHours(p.durationHours) <= 2);
     if (filter === 'indoor') return PLACES.filter(p => p.indoor);
     if (filter === 'outdoor') return PLACES.filter(p => !p.indoor);
+    if (filter === 'budget') return PLACES.filter(p => p.cost <= 50);
     if (filter === 'favorites') return PLACES.filter(p => favorites.includes(p.id));
     return PLACES;
   }, [filter, favorites]);
 
+  const recommendedPlaces = useMemo(() => {
+    const candidates = filteredPlaces.length ? filteredPlaces : PLACES;
+    return [...candidates].sort((a, b) => decisionScore(b) - decisionScore(a));
+  }, [filteredPlaces]);
+
+  const todayPick = recommendedPlaces[recommendationIndex % recommendedPlaces.length] || PLACES[0];
+  const activeHighlight = todayPick?.highlights?.[recommendationIndex % todayPick.highlights.length];
+
   return (
     <>
       <Head>
-        <title>Kiddo Map · KL family fun map</title>
+        <title>Kiddo Map · Decide in 3 minutes</title>
         <meta name="description" content="Pick a kid-friendly KL place in 3 minutes." />
       </Head>
 
@@ -150,7 +200,7 @@ export default function Home() {
                   color: '#999',
                   marginTop: '3px',
                 }}>
-                  KL family fun · {filteredPlaces.length} places
+                  Decide in 3 minutes
                 </div>
               </div>
             </div>
@@ -210,6 +260,191 @@ export default function Home() {
           </div>
         </motion.div>
 
+        {/* Decision hero */}
+        {todayPick && (
+          <motion.div
+            initial={{ y: -30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: 'spring', damping: 22, delay: 0.12 }}
+            style={{
+              position: 'absolute',
+              top: 'max(92px, calc(env(safe-area-inset-top) + 92px))',
+              left: '16px',
+              right: '16px',
+              zIndex: 12,
+              pointerEvents: 'auto',
+            }}
+          >
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.96)',
+              borderRadius: '24px',
+              boxShadow: '0 16px 44px rgba(34, 34, 34, 0.14)',
+              overflow: 'hidden',
+              border: '1px solid rgba(255,255,255,0.7)',
+              backdropFilter: 'blur(18px)',
+              WebkitBackdropFilter: 'blur(18px)',
+            }}>
+              <div style={{ padding: '16px 16px 14px' }}>
+                <div style={{
+                  fontSize: '11px',
+                  color: '#FF8A65',
+                  fontWeight: 900,
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  marginBottom: '8px',
+                }}>
+                  Today's pick
+                </div>
+                <div style={{
+                  fontFamily: 'Fredoka, sans-serif',
+                  fontSize: '25px',
+                  lineHeight: 1.05,
+                  color: 'var(--charcoal)',
+                  fontWeight: 800,
+                  marginBottom: '10px',
+                }}>
+                  3 minutes to decide where to take your kid today.
+                </div>
+                <button
+                  onClick={() => setSelectedPlace(todayPick)}
+                  className="bouncy-button"
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    borderRadius: '18px',
+                    padding: '12px',
+                    background: todayPick.color.light,
+                    color: 'var(--charcoal)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'grid',
+                    gridTemplateColumns: '56px 1fr',
+                    gap: '12px',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '18px',
+                    background: `linear-gradient(135deg, ${todayPick.color.primary}, ${todayPick.color.dark})`,
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '28px',
+                    boxShadow: `0 8px 18px ${todayPick.color.primary}55`,
+                  }}>
+                    {todayPick.emoji}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{
+                      fontSize: '11px',
+                      color: todayPick.color.dark,
+                      fontWeight: 900,
+                      textTransform: 'uppercase',
+                      marginBottom: '3px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      {todayPick.tagline}
+                    </div>
+                    <div style={{
+                      fontSize: '18px',
+                      fontWeight: 900,
+                      fontFamily: 'Fredoka, sans-serif',
+                      color: 'var(--charcoal)',
+                      marginBottom: '5px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      {todayPick.nameEn || todayPick.name}
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      gap: '8px',
+                      color: '#777',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      flexWrap: 'wrap',
+                    }}>
+                      <span>{todayPick.indoor ? 'Indoor' : 'Outdoor'}</span>
+                      <span>·</span>
+                      <span>{todayPick.durationHours}h</span>
+                      <span>·</span>
+                      <span>Age {todayPick.ageMin}-{todayPick.ageMax}</span>
+                    </div>
+                  </div>
+                </button>
+
+                {activeHighlight && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '28px 1fr',
+                    gap: '8px',
+                    alignItems: 'start',
+                    marginTop: '12px',
+                    color: '#555',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    lineHeight: 1.35,
+                  }}>
+                    <span style={{ fontSize: '20px', lineHeight: 1 }}>{activeHighlight.emoji}</span>
+                    <span>
+                      <strong style={{ color: 'var(--charcoal)' }}>{activeHighlight.text}:</strong>{' '}
+                      {activeHighlight.detail}
+                    </span>
+                  </div>
+                )}
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 112px',
+                  gap: '10px',
+                  marginTop: '14px',
+                }}>
+                  <button
+                    onClick={() => setNavPlace(todayPick)}
+                    className="bouncy-button"
+                    style={{
+                      border: 'none',
+                      borderRadius: '16px',
+                      padding: '12px 10px',
+                      background: 'linear-gradient(135deg, #43A047, #2E7D32)',
+                      color: 'white',
+                      fontFamily: 'Nunito, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 900,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Take me there
+                  </button>
+                  <button
+                    onClick={() => setRecommendationIndex(prev => prev + 1)}
+                    className="bouncy-button"
+                    style={{
+                      border: 'none',
+                      borderRadius: '16px',
+                      padding: '12px 10px',
+                      background: 'var(--cream)',
+                      color: 'var(--charcoal)',
+                      fontFamily: 'Nunito, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 900,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Try another
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Top filters */}
         <motion.div
           initial={{ y: -80, opacity: 0 }}
@@ -217,7 +452,7 @@ export default function Home() {
           transition={{ type: 'spring', damping: 20, delay: 0.2 }}
           style={{
             position: 'absolute',
-            top: 'max(86px, calc(env(safe-area-inset-top) + 86px))',
+            top: 'max(360px, calc(env(safe-area-inset-top) + 360px))',
             left: 0,
             right: 0,
             zIndex: 10,
@@ -233,7 +468,7 @@ export default function Home() {
               paddingBottom: '8px',
             }}
           >
-            {FILTERS.map(f => {
+            {QUICK_FILTERS.map(f => {
               const isActive = filter === f.id;
               const count = f.id === 'favorites' ? favorites.length : '';
               return (
