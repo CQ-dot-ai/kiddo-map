@@ -26,6 +26,13 @@ const AREA_FILTERS = [
   { id: 'bangsar', label: 'Bangsar' },
 ];
 
+const AREA_COORDS = {
+  klcc: { label: 'KLCC', coordinates: [101.7139, 3.1579] },
+  pj: { label: 'PJ', coordinates: [101.6068, 3.1073] },
+  'mont-kiara': { label: 'Mont Kiara', coordinates: [101.6523, 3.1696] },
+  bangsar: { label: 'Bangsar', coordinates: [101.6715, 3.1296] },
+};
+
 const TIME_FILTERS = [
   { id: 'any', label: 'Any time' },
   { id: 'quick', label: '1-2h' },
@@ -109,9 +116,88 @@ function weatherNote(place) {
     : 'Best when the sky looks friendly';
 }
 
-function decisionScore(place, age, area, time, mood, favorites) {
+function distanceKm(from, to) {
+  const toRad = value => (value * Math.PI) / 180;
+  const [fromLng, fromLat] = from;
+  const [toLng, toLat] = to;
+  const earthKm = 6371;
+  const dLat = toRad(toLat - fromLat);
+  const dLng = toRad(toLng - fromLng);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(fromLat)) * Math.cos(toRad(toLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * earthKm * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function driveEstimate(place, area) {
+  if (!AREA_COORDS[area]) {
+    return {
+      label: 'Drive',
+      value: 'Pick your start area',
+      detail: 'Add an area to see a rough drive time.',
+    };
+  }
+
+  const km = distanceKm(AREA_COORDS[area].coordinates, place.coordinates);
+  const minutes = Math.max(8, Math.round((km / 24) * 60 + 8));
+  return {
+    label: 'Drive',
+    value: `~${minutes} min from ${AREA_COORDS[area].label}`,
+    detail: `Rough estimate based on distance, not live traffic.`,
+  };
+}
+
+function todayContext() {
+  const now = new Date();
+  const hour = now.getHours();
+  const day = now.getDay();
+  return {
+    hour,
+    isMorning: hour < 12,
+    isAfternoon: hour >= 12 && hour < 18,
+    isWeekend: day === 0 || day === 6,
+  };
+}
+
+function todayReasons(place, area, context) {
+  const energy = parentEnergy(place);
+  const drive = driveEstimate(place, area);
+  const weather =
+    place.weatherSafe
+      ? context.isAfternoon
+        ? 'A/C cover if KL turns hot or rainy.'
+        : 'Rain-safe, no sky-check needed.'
+      : context.isMorning
+        ? 'Better before the day gets hot.'
+        : 'Go only if the sky still looks friendly.';
+  const time =
+    maxDurationHours(place.durationHours) <= 2
+      ? `${place.durationHours}h, easy to fit between meals.`
+      : `${place.durationHours}h, more like a half-day plan.`;
+  const parent =
+    context.isWeekend
+      ? `${energy.label}: weekend-friendly, lower planning load.`
+      : `${energy.label}: ${energy.detail}`;
+
+  return [
+    ['☔', 'Why today', weather],
+    ['👶', 'Kid fit', `Best for age ${place.ageMin}-${place.ageMax}.`],
+    ['⏱️', 'Time', time],
+    ['☕', 'Parent energy', parent],
+    ['🚗', drive.label, drive.value],
+  ];
+}
+
+function decisionScore(place, age, area, time, mood, favorites, context) {
   const ease = parentEnergy(place).label === 'Easy mode' ? 10 : parentEnergy(place).label === 'Medium easy' ? 6 : 2;
   const weather = place.weatherSafe ? 10 : 3;
+  const dayFit =
+    context?.isMorning && !place.indoor
+      ? 8
+      : context?.isAfternoon && place.indoor
+        ? 8
+        : 0;
+  const weekendFit = context?.isWeekend && ease >= 6 ? 6 : 0;
   const ageFit = ageMatches(place, age) ? 12 : -18;
   const timeFit =
     time === 'quick'
@@ -134,12 +220,12 @@ function decisionScore(place, age, area, time, mood, favorites) {
             : 0;
   const budget = place.cost <= 50 ? 4 : 0;
 
-  return place.ourRating * 10 + ease + weather + ageFit + timeFit + areaFit + moodFit + budget;
+  return place.ourRating * 10 + ease + weather + dayFit + weekendFit + ageFit + timeFit + areaFit + moodFit + budget;
 }
 
-function PickCard({ place, rank, variant = 'primary', onDetails, onNavigate, onTryAnother }) {
-  const energy = parentEnergy(place);
+function PickCard({ place, rank, variant = 'primary', area, context, onDetails, onNavigate, onChangeAnswer }) {
   const isPrimary = variant === 'primary';
+  const reasons = todayReasons(place, area, context);
 
   return (
     <div style={{
@@ -230,10 +316,7 @@ function PickCard({ place, rank, variant = 'primary', onDetails, onNavigate, onT
             marginTop: '14px',
           }}>
             {[
-              ['☔', 'Weather', weatherNote(place)],
-              ['👶', 'Kid fit', `Best for age ${place.ageMin}-${place.ageMax}`],
-              ['⏱️', 'Play time', `${place.durationHours} hours`],
-              ['☕', 'Parent energy', energy.label],
+              ...reasons.slice(0, 4),
             ].map(([emoji, label, value]) => (
               <div key={label} style={{
                 background: place.color.light,
@@ -259,7 +342,7 @@ function PickCard({ place, rank, variant = 'primary', onDetails, onNavigate, onT
           fontWeight: 700,
           lineHeight: 1.35,
         }}>
-          <strong style={{ color: 'var(--charcoal)' }}>{energy.label}:</strong> {energy.detail}
+          <strong style={{ color: 'var(--charcoal)' }}>Drive check:</strong> {reasons[4][2]}
         </div>
         <div style={{
           marginTop: '6px',
@@ -305,22 +388,26 @@ function PickCard({ place, rank, variant = 'primary', onDetails, onNavigate, onT
               Take me there
             </button>
             <button
-              onClick={onTryAnother}
+              onClick={onChangeAnswer}
               className="bouncy-button"
               style={{
                 border: 'none',
                 borderRadius: '16px',
-                width: '52px',
+                padding: '0 14px',
                 background: 'var(--cream)',
                 color: 'var(--charcoal)',
+                fontFamily: 'Nunito, sans-serif',
+                fontSize: '13px',
+                fontWeight: 900,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                gap: '7px',
               }}
-              aria-label="Try another pick"
             >
               <RefreshCcw size={18} strokeWidth={3} />
+              Change answer
             </button>
           </div>
         ) : (
@@ -362,9 +449,13 @@ export default function Home() {
   const [favorites, setFavorites] = useState([]);
   const [showInstallHint, setShowInstallHint] = useState(false);
   const [showAllOnMap, setShowAllOnMap] = useState(false);
+  const [showTweaks, setShowTweaks] = useState(false);
   const [recommendationOffset, setRecommendationOffset] = useState(0);
+  const [context, setContext] = useState({ isMorning: true, isAfternoon: false, isWeekend: false, hour: 9 });
 
   useEffect(() => {
+    setContext(todayContext());
+
     const saved = localStorage.getItem('kiddo-favorites');
     if (saved) setFavorites(JSON.parse(saved));
 
@@ -416,8 +507,8 @@ export default function Home() {
   const rankedPlaces = useMemo(() => {
     const candidates = filteredPlaces.length ? filteredPlaces : PLACES;
     return [...candidates]
-      .sort((a, b) => decisionScore(b, age, area, time, mood, favorites) - decisionScore(a, age, area, time, mood, favorites));
-  }, [filteredPlaces, age, area, time, mood, favorites]);
+      .sort((a, b) => decisionScore(b, age, area, time, mood, favorites, context) - decisionScore(a, age, area, time, mood, favorites, context));
+  }, [filteredPlaces, age, area, time, mood, favorites, context]);
 
   const picks = useMemo(() => {
     const safeOffset = rankedPlaces.length ? recommendationOffset % rankedPlaces.length : 0;
@@ -529,16 +620,6 @@ export default function Home() {
             </div>
 
             <section style={{ marginBottom: '16px' }}>
-              <div style={{
-                fontSize: '11px',
-                color: '#FF8A65',
-                fontWeight: 900,
-                letterSpacing: '0.5px',
-                textTransform: 'uppercase',
-                marginBottom: '8px',
-              }}>
-                3-minute decision tool
-              </div>
               <h1 style={{
                 margin: 0,
                 fontFamily: 'Fredoka, sans-serif',
@@ -549,65 +630,6 @@ export default function Home() {
               }}>
                 Decide where to take your kid in 3 minutes.
               </h1>
-              <p style={{
-                margin: '10px 0 0',
-                color: '#666',
-                fontSize: '15px',
-                lineHeight: 1.45,
-                fontWeight: 700,
-              }}>
-                Kiddo Map gives you one strong answer first, then two backups. No map homework before coffee.
-              </p>
-            </section>
-
-            <section style={{
-              display: 'grid',
-              gap: '9px',
-              marginBottom: '14px',
-              background: 'rgba(255,255,255,0.72)',
-              borderRadius: '20px',
-              padding: '12px',
-              boxShadow: '0 8px 24px rgba(34,34,34,0.06)',
-            }}>
-              {[
-                ['Kid age', AGE_FILTERS, age, setAge],
-                ['Starting area', AREA_FILTERS, area, setArea],
-                ['Time today', TIME_FILTERS, time, setTime],
-                ['Today feels like', MOOD_FILTERS, mood, setMood],
-              ].map(([label, items, value, setter]) => (
-                <div key={label} style={{ display: 'grid', gap: '6px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                    {label}
-                  </div>
-                  <div className="hide-scrollbar" style={{ display: 'flex', gap: '7px', overflowX: 'auto', paddingBottom: '2px' }}>
-                    {items.map(item => {
-                      const active = value === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => setter(item.id)}
-                          className="bouncy-button"
-                          style={{
-                            flexShrink: 0,
-                            border: 'none',
-                            borderRadius: '999px',
-                            padding: '8px 11px',
-                            background: active ? 'linear-gradient(135deg, #FF8A65, #FFD54F)' : 'white',
-                            color: active ? 'white' : '#555',
-                            fontFamily: 'Nunito, sans-serif',
-                            fontSize: '12px',
-                            fontWeight: 900,
-                            cursor: 'pointer',
-                            boxShadow: active ? '0 7px 18px rgba(255,138,101,0.26)' : '0 4px 12px rgba(0,0,0,0.05)',
-                          }}
-                        >
-                          {item.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
             </section>
 
             {mainPick && (
@@ -615,50 +637,131 @@ export default function Home() {
                 <PickCard
                   place={mainPick}
                   rank="Best pick right now"
+                  area={area}
+                  context={context}
                   onDetails={() => setSelectedPlace(mainPick)}
                   onNavigate={() => setNavPlace(mainPick)}
-                  onTryAnother={() => setRecommendationOffset(prev => prev + 1)}
+                  onChangeAnswer={() => setShowTweaks(prev => !prev)}
                 />
 
-                <div style={{ display: 'grid', gap: '10px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                    Two backup picks
-                  </div>
-                  {backupPicks.map((place, index) => (
-                    <PickCard
-                      key={place.id}
-                      place={place}
-                      rank={index === 0 ? 'Good backup' : 'Another safe bet'}
-                      variant="backup"
-                      onDetails={() => setSelectedPlace(place)}
-                      onNavigate={() => setNavPlace(place)}
-                    />
-                  ))}
-                </div>
+                <AnimatePresence initial={false}>
+                  {showTweaks && (
+                    <motion.section
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ type: 'spring', damping: 24 }}
+                      style={{
+                        display: 'grid',
+                        gap: '9px',
+                        background: 'rgba(255,255,255,0.72)',
+                        borderRadius: '20px',
+                        padding: '12px',
+                        boxShadow: '0 8px 24px rgba(34,34,34,0.06)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {[
+                        ['Kid age', AGE_FILTERS, age, setAge],
+                        ['Starting area', AREA_FILTERS, area, setArea],
+                        ['Time today', TIME_FILTERS, time, setTime],
+                        ['Today feels like', MOOD_FILTERS, mood, setMood],
+                      ].map(([label, items, value, setter]) => (
+                        <div key={label} style={{ display: 'grid', gap: '6px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
+                            {label}
+                          </div>
+                          <div className="hide-scrollbar" style={{ display: 'flex', gap: '7px', overflowX: 'auto', paddingBottom: '2px' }}>
+                            {items.map(item => {
+                              const active = value === item.id;
+                              return (
+                                <button
+                                  key={item.id}
+                                  onClick={() => setter(item.id)}
+                                  className="bouncy-button"
+                                  style={{
+                                    flexShrink: 0,
+                                    border: 'none',
+                                    borderRadius: '999px',
+                                    padding: '8px 11px',
+                                    background: active ? 'linear-gradient(135deg, #FF8A65, #FFD54F)' : 'white',
+                                    color: active ? 'white' : '#555',
+                                    fontFamily: 'Nunito, sans-serif',
+                                    fontSize: '12px',
+                                    fontWeight: 900,
+                                    cursor: 'pointer',
+                                    boxShadow: active ? '0 7px 18px rgba(255,138,101,0.26)' : '0 4px 12px rgba(0,0,0,0.05)',
+                                  }}
+                                >
+                                  {item.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => setRecommendationOffset(prev => prev + 1)}
+                        className="bouncy-button"
+                        style={{
+                          border: 'none',
+                          borderRadius: '14px',
+                          padding: '11px 12px',
+                          background: 'var(--charcoal)',
+                          color: 'white',
+                          fontFamily: 'Nunito, sans-serif',
+                          fontSize: '13px',
+                          fontWeight: 900,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Show me another good answer
+                      </button>
 
-                <button
-                  onClick={() => setShowAllOnMap(prev => !prev)}
-                  className="bouncy-button"
-                  style={{
-                    border: 'none',
-                    borderRadius: '16px',
-                    padding: '13px',
-                    background: 'white',
-                    color: 'var(--charcoal)',
-                    fontFamily: 'Nunito, sans-serif',
-                    fontSize: '14px',
-                    fontWeight: 900,
-                    cursor: 'pointer',
-                    boxShadow: '0 5px 16px rgba(0,0,0,0.07)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  <MapPinned size={17} strokeWidth={3} />
-                  {showAllOnMap ? 'Show only these 3 picks' : 'Explore full map'}
-                </button>
+                      <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
+                          Two backup picks
+                        </div>
+                        {backupPicks.map((place, index) => (
+                          <PickCard
+                            key={place.id}
+                            place={place}
+                            rank={index === 0 ? 'Good backup' : 'Another safe bet'}
+                            variant="backup"
+                            area={area}
+                            context={context}
+                            onDetails={() => setSelectedPlace(place)}
+                            onNavigate={() => setNavPlace(place)}
+                          />
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => setShowAllOnMap(prev => !prev)}
+                        className="bouncy-button"
+                        style={{
+                          border: 'none',
+                          borderRadius: '16px',
+                          padding: '13px',
+                          background: 'white',
+                          color: 'var(--charcoal)',
+                          fontFamily: 'Nunito, sans-serif',
+                          fontSize: '14px',
+                          fontWeight: 900,
+                          cursor: 'pointer',
+                          boxShadow: '0 5px 16px rgba(0,0,0,0.07)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <MapPinned size={17} strokeWidth={3} />
+                        {showAllOnMap ? 'Show only these 3 picks' : 'Explore full map'}
+                      </button>
+                    </motion.section>
+                  )}
+                </AnimatePresence>
               </section>
             )}
           </motion.main>
