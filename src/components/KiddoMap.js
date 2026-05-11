@@ -43,14 +43,20 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
     );
 
     map.current.on('load', () => {
+      if (!map.current) return;
+
       setMapLoaded(true);
       
       // 自定义地图样式 - 童趣糖果色
-      map.current.setPaintProperty('water', 'fill-color', '#B3E0FF');
-      map.current.setPaintProperty('land', 'background-color', '#FFF8E7');
+      try {
+        map.current.setPaintProperty('water', 'fill-color', '#B3E0FF');
+        map.current.setPaintProperty('land', 'background-color', '#FFF8E7');
+      } catch (error) {
+        console.warn('Map style update skipped:', error?.message || error);
+      }
       
       // 调整道路颜色
-      const layers = map.current.getStyle().layers;
+      const layers = map.current.getStyle()?.layers || [];
       layers.forEach(layer => {
         if (layer.id.includes('road') && layer.type === 'line') {
           try {
@@ -67,7 +73,12 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
 
     return () => {
       if (map.current) {
-        map.current.remove();
+        try {
+          map.current.remove();
+        } catch (error) {
+          // Mapbox can abort pending tile requests during React refresh/unmount.
+          console.warn('Map cleanup skipped:', error?.message || error);
+        }
         map.current = null;
       }
     };
