@@ -23,10 +23,8 @@ export default function NavigationSheet({ place, onClose }) {
   const wazeWebUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes&zoom=17`;
   const wazeAppUrl = `waze://?ll=${lat},${lng}&navigate=yes`;
 
-  // Grab URL - use app deep link in app mode, web link otherwise
-  const grabUrl = isApp
-    ? `grab://search?latitude=${lat}&longitude=${lng}`
-    : 'https://www.grab.com/my/consumer/transport/';
+  const grabWebUrl = 'https://www.grab.com/my/consumer/transport/';
+  const grabAppUrl = `grab://search?latitude=${lat}&longitude=${lng}`;
 
   const openAppOrFallback = (appUrl, webUrl) => {
     const fallback = window.setTimeout(() => {
@@ -71,7 +69,11 @@ export default function NavigationSheet({ place, onClose }) {
     }
 
     if (provider === 'grab') {
-      window.location.href = grabUrl;
+      if (isIOS || isAndroid || isApp) {
+        openAppOrFallback(grabAppUrl, grabWebUrl);
+      } else {
+        window.open(grabWebUrl, '_blank');
+      }
     }
 
     onClose();
@@ -244,48 +246,45 @@ export default function NavigationSheet({ place, onClose }) {
             <div style={{ fontSize: '20px' }}>→</div>
           </button>
 
-          {/* Grab - Only show in App mode */}
-          {isApp && (
-            <button
-              onClick={() => handleNavigate('grab')}
-              className="bouncy-button"
-              style={{
-                background: 'linear-gradient(135deg, #00B14F, #008C3A)',
-                border: 'none',
-                borderRadius: '20px',
-                padding: '18px 20px',
-                color: 'white',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                boxShadow: '0 6px 20px rgba(0, 177, 79, 0.28)',
-                fontFamily: 'Nunito, sans-serif',
-              }}
-            >
-              <div style={{
-                width: '44px',
-                height: '44px',
-                background: 'rgba(255,255,255,0.25)',
-                borderRadius: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '24px',
-              }}>
-                🚕
+          <button
+            onClick={() => handleNavigate('grab')}
+            className="bouncy-button"
+            style={{
+              background: 'linear-gradient(135deg, #00B14F, #008C3A)',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '18px 20px',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              boxShadow: '0 6px 20px rgba(0, 177, 79, 0.28)',
+              fontFamily: 'Nunito, sans-serif',
+            }}
+          >
+            <div style={{
+              width: '44px',
+              height: '44px',
+              background: 'rgba(255,255,255,0.25)',
+              borderRadius: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px',
+            }}>
+              🚕
+            </div>
+            <div style={{ flex: 1, textAlign: 'left' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '2px' }}>
+                Grab
               </div>
-              <div style={{ flex: 1, textAlign: 'left' }}>
-                <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '2px' }}>
-                  Grab
-                </div>
-                <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>
-                  Open Grab app to request a ride
-                </div>
+              <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>
+                Open Grab app or book on the web
               </div>
-              <div style={{ fontSize: '20px' }}>→</div>
-            </button>
-          )}
+            </div>
+            <div style={{ fontSize: '20px' }}>→</div>
+          </button>
 
           {/* Cancel */}
           <button
