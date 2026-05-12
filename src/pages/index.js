@@ -196,7 +196,7 @@ function getBackupContrastReason(backupIndex) {
   return contrastReasons[backupIndex] || contrastReasons[0];
 }
 
-function decisionScore(place, age, area, time, energy, favorites, context) {
+function decisionScore(place, age, area, time, energy, context) {
   const energyLabel = parentEnergy(place).label;
   const ease = energyLabel === 'Easy mode' ? 10 : energyLabel === 'Medium easy' ? 6 : 2;
   const weather = place.weatherSafe ? 10 : 3;
@@ -498,7 +498,6 @@ export default function Home() {
   const [navPlace, setNavPlace] = useState(null);
   const [showTipJar, setShowTipJar] = useState(false);
   const [favorites, setFavorites] = useState([]);
-  const [showInstallHint, setShowInstallHint] = useState(false);
   const [showAllOnMap, setShowAllOnMap] = useState(false);
   const [showTweaks, setShowTweaks] = useState(false);
   const [showSavedSheet, setShowSavedSheet] = useState(false);
@@ -554,8 +553,8 @@ export default function Home() {
   const rankedPlaces = useMemo(() => {
     const candidates = filteredPlaces.length ? filteredPlaces : PLACES;
     return [...candidates]
-      .sort((a, b) => decisionScore(b, age, area, time, energy, favorites, context) - decisionScore(a, age, area, time, energy, favorites, context));
-  }, [filteredPlaces, age, area, time, energy, favorites, context]);
+      .sort((a, b) => decisionScore(b, age, area, time, energy, context) - decisionScore(a, age, area, time, energy, context));
+  }, [filteredPlaces, age, area, time, energy, context]);
 
   const picks = useMemo(() => {
     const safeOffset = rankedPlaces.length ? recommendationOffset % rankedPlaces.length : 0;
@@ -1022,59 +1021,6 @@ export default function Home() {
             )}
           </aside>
         </div>
-
-        <AnimatePresence>
-          {showInstallHint && isDesktop && (
-            <motion.div
-              initial={{ y: 200, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 200, opacity: 0 }}
-              style={{
-                position: 'fixed',
-                bottom: '100px',
-                left: '16px',
-                right: '16px',
-                zIndex: 20,
-                background: 'linear-gradient(135deg, #FF8A65, #FFD54F)',
-                color: 'white',
-                padding: '14px 18px',
-                borderRadius: '20px',
-                boxShadow: '0 12px 40px rgba(255, 138, 101, 0.4)',
-                fontSize: '13px',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}
-            >
-              <span style={{ fontSize: '24px' }}>📱</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 800, marginBottom: '2px' }}>Add to Home Screen</div>
-                <div style={{ fontSize: '11px', opacity: 0.9 }}>
-                  Safari → Share → "Add to Home Screen"
-                </div>
-              </div>
-              <button
-                onClick={() => setShowInstallHint(false)}
-                className="bouncy-button"
-                style={{
-                  background: 'rgba(255,255,255,0.25)',
-                  border: 'none',
-                  borderRadius: '999px',
-                  width: '28px',
-                  height: '28px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <X size={14} strokeWidth={3} />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Mobile: Show PlaceDetail as bottom sheet on mobile only (≤820px) */}
         <AnimatePresence>
