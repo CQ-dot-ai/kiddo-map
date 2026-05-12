@@ -595,6 +595,8 @@ export default function Home() {
               position: 'relative',
               zIndex: 8,
               overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
               padding: '18px',
               paddingTop: 'max(18px, env(safe-area-inset-top))',
               paddingBottom: 'max(18px, env(safe-area-inset-bottom))',
@@ -656,7 +658,7 @@ export default function Home() {
                   gap: isDesktop && selectedPlace ? '14px' : '12px',
                 }}>
                   {/* Card flow - always visible */}
-                  <section style={{ display: 'grid', gap: '12px', overflowY: 'auto' }}>
+                  <section style={{ display: 'grid', gap: '12px' }}>
                     <PickCard
                       place={mainPick}
                       rank="Best pick right now"
