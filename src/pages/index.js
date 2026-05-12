@@ -568,6 +568,18 @@ export default function Home() {
   const backupPicks = picks.slice(1, 3);
   const mapPlaces = showAllOnMap ? (filteredPlaces.length ? filteredPlaces : PLACES) : picks;
 
+  const openFullMap = () => {
+    setSelectedPlace(null);
+    setShowTweaks(false);
+    setShowAllOnMap(true);
+    setShowMapFullscreen(true);
+  };
+
+  const closeFullMap = () => {
+    setShowMapFullscreen(false);
+    setShowAllOnMap(false);
+  };
+
   return (
     <>
       <Head>
@@ -882,6 +894,36 @@ export default function Home() {
                 Showing {showAllOnMap ? 'all matching places' : 'the main pick and 2 backups'}.
               </div>
             </div>
+
+            {!isDesktop && showMapFullscreen && (
+              <button
+                onClick={closeFullMap}
+                className="bouncy-button"
+                style={{
+                  position: 'absolute',
+                  top: '18px',
+                  right: '18px',
+                  zIndex: 7,
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: '12px 14px',
+                  background: 'rgba(255,255,255,0.95)',
+                  color: 'var(--charcoal)',
+                  boxShadow: '0 8px 24px rgba(34,34,34,0.14)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontFamily: 'Nunito, sans-serif',
+                  fontSize: '13px',
+                  fontWeight: 900,
+                }}
+              >
+                <X size={16} strokeWidth={3} />
+                Back to picks
+              </button>
+            )}
 
             {/* Right sidebar: Tip Jar + Saved Spots */}
             {isDesktop && (
@@ -1320,8 +1362,11 @@ export default function Home() {
 
                   <button
                     onClick={() => {
-                      setShowTweaks(false);
-                      setShowAllOnMap(prev => !prev);
+                      if (showMapFullscreen || showAllOnMap) {
+                        closeFullMap();
+                        return;
+                      }
+                      openFullMap();
                     }}
                     className="bouncy-button"
                     style={{
@@ -1342,7 +1387,7 @@ export default function Home() {
                     }}
                   >
                     <MapPinned size={17} strokeWidth={3} />
-                    {showAllOnMap ? 'Show only these 3 picks' : 'Explore full map'}
+                    {showMapFullscreen || showAllOnMap ? 'Back to picks' : 'Explore full map'}
                   </button>
                 </div>
               </motion.section>
