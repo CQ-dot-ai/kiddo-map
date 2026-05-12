@@ -3,6 +3,9 @@ import { X } from 'lucide-react';
 
 export default function NavigationSheet({ place, onClose }) {
   const [lng, lat] = place.coordinates;
+  const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : '';
+  const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+  const isAndroid = /Android/i.test(userAgent);
 
   // Detect if running in PWA/App mode
   const isApp = typeof window !== 'undefined' && (
@@ -10,19 +13,67 @@ export default function NavigationSheet({ place, onClose }) {
     window.matchMedia('(display-mode: standalone)').matches
   );
 
-  // Google Maps URL
-  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  const googleMapsWebUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  const googleMapsAppUrl = isIOS
+    ? `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving`
+    : isAndroid
+      ? `google.navigation:q=${lat},${lng}&mode=d`
+      : googleMapsWebUrl;
 
-  // Waze URL
-  const wazeUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes&zoom=17`;
+  const wazeWebUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes&zoom=17`;
+  const wazeAppUrl = `waze://?ll=${lat},${lng}&navigate=yes`;
 
   // Grab URL - use app deep link in app mode, web link otherwise
   const grabUrl = isApp
     ? `grab://search?latitude=${lat}&longitude=${lng}`
     : 'https://www.grab.com/my/consumer/transport/';
 
-  const handleNavigate = (url) => {
-    window.open(url, '_blank');
+  const openAppOrFallback = (appUrl, webUrl) => {
+    const fallback = window.setTimeout(() => {
+      window.location.href = webUrl;
+    }, 900);
+
+    const clearFallback = () => {
+      window.clearTimeout(fallback);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', clearFallback);
+      window.removeEventListener('blur', clearFallback);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearFallback();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', clearFallback, { once: true });
+    window.addEventListener('blur', clearFallback, { once: true });
+
+    window.location.href = appUrl;
+  };
+
+  const handleNavigate = (provider) => {
+    if (provider === 'google') {
+      if (isIOS || isAndroid) {
+        openAppOrFallback(googleMapsAppUrl, googleMapsWebUrl);
+      } else {
+        window.open(googleMapsWebUrl, '_blank');
+      }
+    }
+
+    if (provider === 'waze') {
+      if (isIOS || isAndroid) {
+        openAppOrFallback(wazeAppUrl, wazeWebUrl);
+      } else {
+        window.open(wazeWebUrl, '_blank');
+      }
+    }
+
+    if (provider === 'grab') {
+      window.location.href = grabUrl;
+    }
+
     onClose();
   };
 
@@ -113,7 +164,7 @@ export default function NavigationSheet({ place, onClose }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {/* Google Maps */}
           <button
-            onClick={() => handleNavigate(googleMapsUrl)}
+            onClick={() => handleNavigate('google')}
             className="bouncy-button"
             style={{
               background: 'linear-gradient(135deg, #4285F4, #1A73E8)',
@@ -154,7 +205,7 @@ export default function NavigationSheet({ place, onClose }) {
 
           {/* Waze */}
           <button
-            onClick={() => handleNavigate(wazeUrl)}
+            onClick={() => handleNavigate('waze')}
             className="bouncy-button"
             style={{
               background: 'linear-gradient(135deg, #33CCFF, #00AAFF)',
@@ -196,7 +247,7 @@ export default function NavigationSheet({ place, onClose }) {
           {/* Grab - Only show in App mode */}
           {isApp && (
             <button
-              onClick={() => handleNavigate(grabUrl)}
+              onClick={() => handleNavigate('grab')}
               className="bouncy-button"
               style={{
                 background: 'linear-gradient(135deg, #00B14F, #008C3A)',
