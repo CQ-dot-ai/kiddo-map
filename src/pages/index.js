@@ -233,10 +233,11 @@ function decisionScore(place, age, area, time, energy, favorites, context) {
   return place.ourRating * 10 + ease + weather + dayFit + weekendFit + ageFit + timeFit + areaFit + energyFit + budget;
 }
 
-function PickCard({ place, rank, variant = 'primary', area, context, onDetails, onNavigate, onChangeAnswer, onViewMap, isPreview = false }) {
+function PickCard({ place, rank, variant = 'primary', area, context, onDetails, onNavigate, onChangeAnswer, onViewMap, isPreview = false, compact = false }) {
   const isPrimary = variant === 'primary';
   const reasons = todayReasons(place, area, context);
   const showDetails = isPrimary && !isPreview;
+  const compactChangeLabel = compact ? 'Change' : 'Change answer';
 
   return (
     <div style={{
@@ -330,7 +331,7 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '8px',
-            marginTop: '14px',
+            marginTop: compact ? '12px' : '14px',
           }}>
             {[
               ...reasons.slice(0, 4),
@@ -338,13 +339,13 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
               <div key={label} style={{
                 background: place.color.light,
                 borderRadius: '14px',
-                padding: '10px',
-                minHeight: '58px',
+                padding: compact ? '9px' : '10px',
+                minHeight: compact ? '54px' : '58px',
               }}>
-                <div style={{ fontSize: '13px', fontWeight: 900, color: place.color.dark }}>
+                <div style={{ fontSize: compact ? '12px' : '13px', fontWeight: 900, color: place.color.dark }}>
                   {emoji} {label}
                 </div>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: '#555', marginTop: '3px', lineHeight: 1.25 }}>
+                <div style={{ fontSize: compact ? '11px' : '12px', fontWeight: 800, color: '#555', marginTop: '3px', lineHeight: 1.22 }}>
                   {value}
                 </div>
               </div>
@@ -355,23 +356,25 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
         {showDetails && (
           <>
             <div style={{
-              marginTop: isPrimary ? '12px' : '8px',
+              marginTop: isPrimary ? (compact ? '10px' : '12px') : '8px',
               color: '#555',
-              fontSize: '13px',
+              fontSize: compact ? '12px' : '13px',
               fontWeight: 700,
               lineHeight: 1.35,
             }}>
               <strong style={{ color: 'var(--charcoal)' }}>Drive check:</strong> {reasons[4][2]}
             </div>
-            <div style={{
-              marginTop: '6px',
-              color: '#777',
-              fontSize: '12px',
-              fontWeight: 700,
-              lineHeight: 1.35,
-            }}>
-              {frictionNote(place)}
-            </div>
+            {!compact && (
+              <div style={{
+                marginTop: '6px',
+                color: '#777',
+                fontSize: '12px',
+                fontWeight: 700,
+                lineHeight: 1.35,
+              }}>
+                {frictionNote(place)}
+              </div>
+            )}
           </>
         )}
       </button>
@@ -429,7 +432,7 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
                 }}
               >
                 <RefreshCcw size={18} strokeWidth={3} />
-                Show me more
+                {compactChangeLabel}
               </button>
             )}
           </div>
@@ -456,7 +459,7 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
       </div>
 
       {/* Mini map preview at bottom */}
-      {onViewMap && showDetails && (
+      {onViewMap && showDetails && !compact && (
         <button
           onClick={() => onViewMap(place)}
           className="bouncy-button"
@@ -507,18 +510,13 @@ export default function Home() {
   const [recommendationOffset, setRecommendationOffset] = useState(0);
   const [context, setContext] = useState({ isMorning: true, isAfternoon: false, isWeekend: false, hour: 9 });
   const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth > 820 : false);
+  const isMobile = !isDesktop;
 
   useEffect(() => {
     setContext(todayContext());
 
     const saved = localStorage.getItem('kiddo-favorites');
     if (saved) setFavorites(JSON.parse(saved));
-
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-    if (isIOS && !isStandalone) {
-      setTimeout(() => setShowInstallHint(true), 3000);
-    }
 
     // Track viewport size for desktop PlaceDetail layout
     const handleResize = () => {
@@ -640,8 +638,8 @@ export default function Home() {
               <h1 style={{
                 margin: 0,
                 fontFamily: 'Fredoka, sans-serif',
-                fontSize: '40px',
-                lineHeight: 1.02,
+                fontSize: isMobile ? '34px' : '40px',
+                lineHeight: isMobile ? 1.03 : 1.02,
                 color: 'var(--charcoal)',
                 letterSpacing: 0,
               }}>
@@ -672,6 +670,7 @@ export default function Home() {
                         setShowMapModal(true);
                       } : undefined}
                       isPreview={isDesktop && selectedPlace ? true : false}
+                      compact={isMobile}
                     />
 
                     <AnimatePresence initial={false}>
@@ -745,7 +744,7 @@ export default function Home() {
                               cursor: 'pointer',
                             }}
                           >
-                            Show me another good spot
+                            Change answer again
                           </button>
 
                           <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
@@ -883,17 +882,18 @@ export default function Home() {
             </div>
 
             {/* Right sidebar: Tip Jar + Saved Spots */}
-            <div style={{
-              position: 'absolute',
-              top: '18px',
-              right: '18px',
-              zIndex: 7,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              maxWidth: '280px',
-              pointerEvents: 'auto',
-            }}>
+            {isDesktop && (
+              <div style={{
+                position: 'absolute',
+                top: '18px',
+                right: '18px',
+                zIndex: 7,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                maxWidth: '280px',
+                pointerEvents: 'auto',
+              }}>
               {/* Tip Jar Button */}
               <button
                 onClick={() => setShowTipJar(true)}
@@ -974,12 +974,13 @@ export default function Home() {
                   </div>
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </aside>
         </div>
 
         <AnimatePresence>
-          {showInstallHint && (
+          {showInstallHint && isDesktop && (
             <motion.div
               initial={{ y: 200, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -1164,14 +1165,15 @@ export default function Home() {
             }
 
             .map-toggle-overlay {
-              display: block !important;
+              display: none !important;
             }
 
             main {
               width: auto !important;
               height: 100% !important;
-              padding: 14px !important;
-              padding-top: max(14px, env(safe-area-inset-top)) !important;
+              padding: 12px !important;
+              padding-top: max(12px, env(safe-area-inset-top)) !important;
+              padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
               transition: opacity 0.2s ease !important;
             }
 
@@ -1179,9 +1181,13 @@ export default function Home() {
               position: fixed !important;
               inset: 0 !important;
               z-index: 1 !important;
-              opacity: 0.22 !important;
+              opacity: 0.14 !important;
               pointer-events: none !important;
               transition: opacity 0.2s ease !important;
+            }
+
+            aside > div[style*='Map is optional'] {
+              display: none !important;
             }
           }
         `}</style>

@@ -544,25 +544,93 @@ export default function PlaceDetail({
 
           .place-detail-card {
             width: 100%;
-            max-height: 88vh;
+            max-height: 84vh;
             border-radius: 32px 32px 0 0;
           }
 
           .place-hero {
-            height: 220px;
+            height: 168px;
           }
 
           .place-content {
-            padding: 18px;
-            padding-bottom: 112px;
+            padding: 14px;
+            padding-bottom: 104px;
+            gap: 10px;
           }
 
           .place-detail-card h2 {
-            font-size: 27px;
+            font-size: 24px;
           }
 
           .place-detail-card h3 {
-            font-size: 22px;
+            font-size: 20px;
+          }
+
+          .place-tagline,
+          .section-eyebrow,
+          .section-title,
+          .mini-label {
+            font-size: 10px;
+          }
+
+          .decision-card,
+          .before-card {
+            padding: 14px;
+            border-radius: 18px;
+          }
+
+          .parent-quote {
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            font-size: 11px;
+          }
+
+          .metric-grid {
+            gap: 7px;
+          }
+
+          .drive-card {
+            padding: 12px 14px;
+            border-radius: 16px;
+          }
+
+          .drive-card strong {
+            font-size: 14px;
+          }
+
+          .drive-card span,
+          .before-item span {
+            font-size: 11px;
+          }
+
+          .before-thumb {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+          }
+
+          .before-item {
+            padding: 8px 0;
+          }
+
+          .before-item strong {
+            font-size: 13px;
+          }
+
+          .bottom-actions {
+            padding: 10px 14px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+          }
+
+          .bottom-actions-inner {
+            grid-template-columns: 52px minmax(0, 1fr);
+            gap: 8px;
+          }
+
+          .save-button,
+          .navigate-button {
+            height: 50px;
+            border-radius: 16px;
           }
         }
       `}</style>
