@@ -676,7 +676,7 @@ export default function Home() {
                     />
 
                     <AnimatePresence initial={false}>
-                      {showTweaks && !selectedPlace && (
+                      {showTweaks && !selectedPlace && isDesktop && (
                         <motion.section
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
@@ -1144,6 +1144,209 @@ export default function Home() {
         <AnimatePresence>
           {showTipJar && (
             <TipJarSheet onClose={() => setShowTipJar(false)} />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showTweaks && !selectedPlace && !isDesktop && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowTweaks(false)}
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0, 0, 0, 0.38)',
+                  zIndex: 80,
+                  backdropFilter: 'blur(4px)',
+                  WebkitBackdropFilter: 'blur(4px)',
+                }}
+              />
+              <motion.section
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 26 }}
+                style={{
+                  position: 'fixed',
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 90,
+                  background: 'white',
+                  borderTopLeftRadius: '24px',
+                  borderTopRightRadius: '24px',
+                  boxShadow: '0 -16px 48px rgba(34,34,34,0.18)',
+                  height: 'min(82vh, calc(100dvh - 20px))',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                  touchAction: 'pan-y',
+                }}
+              >
+                <div style={{
+                  padding: '12px 14px 10px',
+                  borderBottom: '1px solid rgba(0,0,0,0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                }}>
+                  <div>
+                    <div style={{ fontFamily: 'Fredoka, sans-serif', fontSize: '20px', fontWeight: 800, color: 'var(--charcoal)' }}>
+                      Change answer
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#777', fontWeight: 700 }}>
+                      Tune the fit, then pick your backup.
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowTweaks(false)}
+                    className="bouncy-button"
+                    style={{
+                      background: 'var(--cream)',
+                      border: 'none',
+                      borderRadius: '999px',
+                      width: '34px',
+                      height: '34px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <X size={18} strokeWidth={2.7} color="#999" />
+                  </button>
+                </div>
+
+                <div
+                  className="hide-scrollbar"
+                  style={{
+                    flex: 1,
+                    minHeight: 0,
+                    overflowY: 'auto',
+                    WebkitOverflowScrolling: 'touch',
+                    overscrollBehavior: 'contain',
+                    touchAction: 'pan-y',
+                    padding: '12px 14px max(18px, env(safe-area-inset-bottom))',
+                    display: 'grid',
+                    gap: '10px',
+                  }}
+                >
+                  {[
+                    ['Kid age', AGE_FILTERS, age, setAge],
+                    ['Starting area', AREA_FILTERS, area, setArea],
+                    ['Time today', TIME_FILTERS, time, setTime],
+                    ["Today's energy", ENERGY_FILTERS, energy, setEnergy],
+                  ].map(([label, items, value, setter]) => (
+                    <div key={label} style={{ display: 'grid', gap: '6px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
+                        {label}
+                      </div>
+                      <div className="hide-scrollbar" style={{ display: 'flex', gap: '7px', overflowX: 'auto', paddingBottom: '2px' }}>
+                        {items.map(item => {
+                          const active = value === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => setter(item.id)}
+                              className="bouncy-button"
+                              style={{
+                                flexShrink: 0,
+                                border: 'none',
+                                borderRadius: '999px',
+                                padding: '9px 12px',
+                                background: active ? 'linear-gradient(135deg, #FF8A65, #FFD54F)' : 'white',
+                                color: active ? 'white' : '#555',
+                                fontFamily: 'Nunito, sans-serif',
+                                fontSize: '12px',
+                                fontWeight: 900,
+                                cursor: 'pointer',
+                                boxShadow: active ? '0 7px 18px rgba(255,138,101,0.26)' : '0 4px 12px rgba(0,0,0,0.05)',
+                              }}
+                            >
+                              {item.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    onClick={() => setRecommendationOffset(prev => prev + 1)}
+                    className="bouncy-button"
+                    style={{
+                      border: 'none',
+                      borderRadius: '14px',
+                      padding: '12px',
+                      background: 'var(--charcoal)',
+                      color: 'white',
+                      fontFamily: 'Nunito, sans-serif',
+                      fontSize: '13px',
+                      fontWeight: 900,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Change answer again
+                  </button>
+
+                  <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
+                      Two backup picks
+                    </div>
+                    {backupPicks.map((place, index) => {
+                      const contrastReason = getBackupContrastReason(index);
+                      return (
+                        <PickCard
+                          key={place.id}
+                          place={place}
+                          rank={`${contrastReason.icon} ${contrastReason.text}`}
+                          variant="backup"
+                          area={area}
+                          context={context}
+                          onDetails={() => {
+                            setShowTweaks(false);
+                            setSelectedPlace(place);
+                          }}
+                          onNavigate={() => setNavPlace(place)}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowTweaks(false);
+                      setShowAllOnMap(prev => !prev);
+                    }}
+                    className="bouncy-button"
+                    style={{
+                      border: 'none',
+                      borderRadius: '16px',
+                      padding: '13px',
+                      background: 'white',
+                      color: 'var(--charcoal)',
+                      fontFamily: 'Nunito, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 900,
+                      cursor: 'pointer',
+                      boxShadow: '0 5px 16px rgba(0,0,0,0.07)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <MapPinned size={17} strokeWidth={3} />
+                    {showAllOnMap ? 'Show only these 3 picks' : 'Explore full map'}
+                  </button>
+                </div>
+              </motion.section>
+            </>
           )}
         </AnimatePresence>
 
