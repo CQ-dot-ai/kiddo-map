@@ -2,13 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare, Coffee, MapPinned, Navigation, RefreshCcw } from 'lucide-react';
+import { X, Coffee, MapPinned, Navigation, RefreshCcw } from 'lucide-react';
 import { PLACES } from '../data/places';
 
 const KiddoMap = dynamic(() => import('../components/KiddoMap'), { ssr: false });
 const PlaceDetail = dynamic(() => import('../components/PlaceDetail'), { ssr: false });
 const NavigationSheet = dynamic(() => import('../components/NavigationSheet'), { ssr: false });
-const FeedbackSheet = dynamic(() => import('../components/FeedbackSheet'), { ssr: false });
 const TipJarSheet = dynamic(() => import('../components/TipJarSheet'), { ssr: false });
 
 const AGE_FILTERS = [
@@ -40,7 +39,7 @@ const TIME_FILTERS = [
   { id: 'half-day', label: 'Half day' },
 ];
 
-const MOOD_FILTERS = [
+const ENERGY_FILTERS = [
   { id: 'any', label: 'Best answer' },
   { id: 'indoor', label: 'Rain-safe' },
   { id: 'outdoor', label: 'Outdoor' },
@@ -188,8 +187,19 @@ function todayReasons(place, area, context) {
   ];
 }
 
-function decisionScore(place, age, area, time, mood, favorites, context) {
-  const ease = parentEnergy(place).label === 'Easy mode' ? 10 : parentEnergy(place).label === 'Medium easy' ? 6 : 2;
+// Contrast reasons for backup picks - fixed labels by position
+function getBackupContrastReason(backupIndex) {
+  const contrastReasons = [
+    { icon: '😌', text: 'Less effort', label: 'Easier on everyone' },       // first backup
+    { icon: '🕐', text: 'Stay longer', label: 'Longer to explore' },        // second backup
+    { icon: '📍', text: 'Closer to you', label: 'Better location' },        // third backup (if exists)
+  ];
+  return contrastReasons[backupIndex] || contrastReasons[0];
+}
+
+function decisionScore(place, age, area, time, energy, favorites, context) {
+  const energyLabel = parentEnergy(place).label;
+  const ease = energyLabel === 'Easy mode' ? 10 : energyLabel === 'Medium easy' ? 6 : 2;
   const weather = place.weatherSafe ? 10 : 3;
   const dayFit =
     context?.isMorning && !place.indoor
@@ -208,24 +218,25 @@ function decisionScore(place, age, area, time, mood, favorites, context) {
         ? maxDurationHours(place.durationHours) >= 3 ? 10 : 1
         : 0;
   const areaFit = areaMatches(place, area) ? 8 : -6;
-  const moodFit =
-    mood === 'indoor'
+  const energyFit =
+    energy === 'indoor'
       ? place.indoor ? 10 : -10
-      : mood === 'outdoor'
+      : energy === 'outdoor'
         ? !place.indoor ? 10 : -5
-        : mood === 'budget'
+        : energy === 'budget'
           ? place.cost <= 50 ? 10 : -8
-          : mood === 'favorites'
+          : energy === 'favorites'
             ? favorites.includes(place.id) ? 14 : -20
             : 0;
   const budget = place.cost <= 50 ? 4 : 0;
 
-  return place.ourRating * 10 + ease + weather + dayFit + weekendFit + ageFit + timeFit + areaFit + moodFit + budget;
+  return place.ourRating * 10 + ease + weather + dayFit + weekendFit + ageFit + timeFit + areaFit + energyFit + budget;
 }
 
-function PickCard({ place, rank, variant = 'primary', area, context, onDetails, onNavigate, onChangeAnswer }) {
+function PickCard({ place, rank, variant = 'primary', area, context, onDetails, onNavigate, onChangeAnswer, onViewMap, isPreview = false }) {
   const isPrimary = variant === 'primary';
   const reasons = todayReasons(place, area, context);
+  const showDetails = isPrimary && !isPreview;
 
   return (
     <div style={{
@@ -251,9 +262,10 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
       >
         <div style={{
           display: 'grid',
-          gridTemplateColumns: isPrimary ? '64px 1fr' : '48px 1fr',
+          gridTemplateColumns: isPreview ? '1fr' : (isPrimary ? '64px 1fr' : '48px 1fr'),
           gap: '12px',
           alignItems: 'center',
+          justifyContent: isPreview ? 'center' : 'flex-start',
         }}>
           <div style={{
             width: isPrimary ? '64px' : '48px',
@@ -266,49 +278,54 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
             justifyContent: 'center',
             fontSize: isPrimary ? '32px' : '24px',
             boxShadow: `0 8px 20px ${place.color.primary}55`,
+            margin: isPreview ? '0 auto' : '0',
           }}>
             {place.emoji}
           </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{
-              fontSize: '11px',
-              color: place.color.dark,
-              fontWeight: 900,
-              textTransform: 'uppercase',
-              marginBottom: '3px',
-            }}>
-              {rank}
+          {!isPreview && (
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: '11px',
+                color: place.color.dark,
+                fontWeight: 900,
+                textTransform: 'uppercase',
+                marginBottom: '3px',
+              }}>
+                {rank}
+              </div>
+              <div style={{
+                fontFamily: 'Fredoka, sans-serif',
+                fontSize: isPrimary ? '21px' : '16px',
+                fontWeight: 800,
+                lineHeight: 1.05,
+                whiteSpace: 'normal',
+                overflow: 'visible',
+                display: '-webkit-box',
+                WebkitLineClamp: isPrimary ? 2 : 1,
+                WebkitBoxOrient: 'vertical',
+              }}>
+                {place.nameEn || place.name}
+              </div>
+              <div style={{
+                display: 'flex',
+                gap: '7px',
+                flexWrap: 'wrap',
+                color: '#777',
+                fontSize: '12px',
+                fontWeight: 800,
+                marginTop: '6px',
+              }}>
+                <span>{weatherNote(place)}</span>
+                <span>·</span>
+                <span>Age {place.ageMin}-{place.ageMax}</span>
+                <span>·</span>
+                <span>{place.durationHours}h</span>
+              </div>
             </div>
-            <div style={{
-              fontFamily: 'Fredoka, sans-serif',
-              fontSize: isPrimary ? '21px' : '16px',
-              fontWeight: 800,
-              lineHeight: 1.05,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}>
-              {place.nameEn || place.name}
-            </div>
-            <div style={{
-              display: 'flex',
-              gap: '7px',
-              flexWrap: 'wrap',
-              color: '#777',
-              fontSize: '12px',
-              fontWeight: 800,
-              marginTop: '6px',
-            }}>
-              <span>{weatherNote(place)}</span>
-              <span>·</span>
-              <span>Age {place.ageMin}-{place.ageMax}</span>
-              <span>·</span>
-              <span>{place.durationHours}h</span>
-            </div>
-          </div>
+          )}
         </div>
 
-        {isPrimary && (
+        {showDetails && (
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
@@ -335,24 +352,28 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
           </div>
         )}
 
-        <div style={{
-          marginTop: isPrimary ? '12px' : '8px',
-          color: '#555',
-          fontSize: '13px',
-          fontWeight: 700,
-          lineHeight: 1.35,
-        }}>
-          <strong style={{ color: 'var(--charcoal)' }}>Drive check:</strong> {reasons[4][2]}
-        </div>
-        <div style={{
-          marginTop: '6px',
-          color: '#777',
-          fontSize: '12px',
-          fontWeight: 700,
-          lineHeight: 1.35,
-        }}>
-          {frictionNote(place)}
-        </div>
+        {showDetails && (
+          <>
+            <div style={{
+              marginTop: isPrimary ? '12px' : '8px',
+              color: '#555',
+              fontSize: '13px',
+              fontWeight: 700,
+              lineHeight: 1.35,
+            }}>
+              <strong style={{ color: 'var(--charcoal)' }}>Drive check:</strong> {reasons[4][2]}
+            </div>
+            <div style={{
+              marginTop: '6px',
+              color: '#777',
+              fontSize: '12px',
+              fontWeight: 700,
+              lineHeight: 1.35,
+            }}>
+              {frictionNote(place)}
+            </div>
+          </>
+        )}
       </button>
 
       <div style={{ padding: isPrimary ? '0 14px 14px' : '0 12px 12px' }}>
@@ -360,7 +381,7 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '1fr auto',
+              gridTemplateColumns: showDetails ? '1fr auto' : '1fr',
               gap: '10px',
             }}
           >
@@ -387,28 +408,30 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
               <Navigation size={17} strokeWidth={3} />
               Take me there
             </button>
-            <button
-              onClick={onChangeAnswer}
-              className="bouncy-button"
-              style={{
-                border: 'none',
-                borderRadius: '16px',
-                padding: '0 14px',
-                background: 'var(--cream)',
-                color: 'var(--charcoal)',
-                fontFamily: 'Nunito, sans-serif',
-                fontSize: '13px',
-                fontWeight: 900,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '7px',
-              }}
-            >
-              <RefreshCcw size={18} strokeWidth={3} />
-              Change answer
-            </button>
+            {showDetails && (
+              <button
+                onClick={onChangeAnswer}
+                className="bouncy-button"
+                style={{
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '0 14px',
+                  background: 'var(--cream)',
+                  color: 'var(--charcoal)',
+                  fontFamily: 'Nunito, sans-serif',
+                  fontSize: '13px',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '7px',
+                }}
+              >
+                <RefreshCcw size={18} strokeWidth={3} />
+                Show me more
+              </button>
+            )}
           </div>
         ) : (
           <button
@@ -431,6 +454,37 @@ function PickCard({ place, rank, variant = 'primary', area, context, onDetails, 
           </button>
         )}
       </div>
+
+      {/* Mini map preview at bottom */}
+      {onViewMap && showDetails && (
+        <button
+          onClick={() => onViewMap(place)}
+          className="bouncy-button"
+          style={{
+            width: '100%',
+            border: 'none',
+            borderRadius: '0',
+            padding: '12px 14px',
+            background: `linear-gradient(135deg, ${place.color.light}, ${place.color.light}dd)`,
+            borderTop: `1px solid ${place.color.primary}33`,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px',
+            color: place.color.dark,
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '13px',
+            fontWeight: 700,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '16px' }}>🗺️</span>
+            <span>{AREA_COORDS[area]?.label || 'Area'}</span>
+          </div>
+          <span style={{ fontSize: '12px', opacity: 0.7 }}>Tap to explore</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -439,19 +493,20 @@ export default function Home() {
   const [age, setAge] = useState('any');
   const [area, setArea] = useState('any');
   const [time, setTime] = useState('any');
-  const [mood, setMood] = useState('any');
+  const [energy, setEnergy] = useState('any');
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [navPlace, setNavPlace] = useState(null);
-  const [showFeedback, setShowFeedback] = useState(false);
   const [showTipJar, setShowTipJar] = useState(false);
-  const [showFeedbackNudge, setShowFeedbackNudge] = useState(false);
-  const [feedbackNudgeDismissed, setFeedbackNudgeDismissed] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [showInstallHint, setShowInstallHint] = useState(false);
   const [showAllOnMap, setShowAllOnMap] = useState(false);
   const [showTweaks, setShowTweaks] = useState(false);
+  const [showMapFullscreen, setShowMapFullscreen] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [mapModalPlace, setMapModalPlace] = useState(null);
   const [recommendationOffset, setRecommendationOffset] = useState(0);
   const [context, setContext] = useState({ isMorning: true, isAfternoon: false, isWeekend: false, hour: 9 });
+  const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth > 820 : false);
 
   useEffect(() => {
     setContext(todayContext());
@@ -464,23 +519,19 @@ export default function Home() {
     if (isIOS && !isStandalone) {
       setTimeout(() => setShowInstallHint(true), 3000);
     }
+
+    // Track viewport size for desktop PlaceDetail layout
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth > 820);
+    };
+    window.addEventListener('resize', handleResize);
+    setIsDesktop(window.innerWidth > 820);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
     localStorage.setItem('kiddo-favorites', JSON.stringify(favorites));
   }, [favorites]);
-
-  useEffect(() => {
-    setShowFeedbackNudge(false);
-
-    if (!selectedPlace || showFeedback || feedbackNudgeDismissed) return;
-
-    const timer = setTimeout(() => {
-      setShowFeedbackNudge(true);
-    }, 10000);
-
-    return () => clearTimeout(timer);
-  }, [selectedPlace, showFeedback, feedbackNudgeDismissed]);
 
   const toggleFavorite = (placeId) => {
     setFavorites(prev =>
@@ -490,25 +541,25 @@ export default function Home() {
 
   useEffect(() => {
     setRecommendationOffset(0);
-  }, [age, area, time, mood]);
+  }, [age, area, time, energy]);
 
   const filteredPlaces = useMemo(() => {
     return PLACES.filter(place => {
       if (!ageMatches(place, age)) return false;
       if (!timeMatches(place, time)) return false;
-      if (mood === 'indoor' && !place.indoor) return false;
-      if (mood === 'outdoor' && place.indoor) return false;
-      if (mood === 'budget' && place.cost > 50) return false;
-      if (mood === 'favorites' && !favorites.includes(place.id)) return false;
+      if (energy === 'indoor' && !place.indoor) return false;
+      if (energy === 'outdoor' && place.indoor) return false;
+      if (energy === 'budget' && place.cost > 50) return false;
+      if (energy === 'favorites' && !favorites.includes(place.id)) return false;
       return true;
     });
-  }, [age, time, mood, favorites]);
+  }, [age, time, energy, favorites]);
 
   const rankedPlaces = useMemo(() => {
     const candidates = filteredPlaces.length ? filteredPlaces : PLACES;
     return [...candidates]
-      .sort((a, b) => decisionScore(b, age, area, time, mood, favorites, context) - decisionScore(a, age, area, time, mood, favorites, context));
-  }, [filteredPlaces, age, area, time, mood, favorites, context]);
+      .sort((a, b) => decisionScore(b, age, area, time, energy, favorites, context) - decisionScore(a, age, area, time, energy, favorites, context));
+  }, [filteredPlaces, age, area, time, energy, favorites, context]);
 
   const picks = useMemo(() => {
     const safeOffset = rankedPlaces.length ? recommendationOffset % rankedPlaces.length : 0;
@@ -536,12 +587,13 @@ export default function Home() {
           display: 'grid',
           gridTemplateColumns: 'minmax(390px, 460px) 1fr',
           height: '100%',
-        }}>
+        }} className={showMapFullscreen ? 'map-fullscreen' : ''} data-map-fullscreen={showMapFullscreen}>
           <motion.main
             initial={{ x: -30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: 'spring', damping: 24 }}
             style={{
+              display: showMapFullscreen ? 'none' : 'block',
               position: 'relative',
               zIndex: 8,
               overflowY: 'auto',
@@ -582,41 +634,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => setShowTipJar(true)}
-                  className="bouncy-button"
-                  style={{
-                    border: 'none',
-                    borderRadius: '14px',
-                    padding: '10px',
-                    background: 'white',
-                    color: 'var(--charcoal)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                    cursor: 'pointer',
-                  }}
-                  aria-label="Support"
-                >
-                  <Coffee size={16} strokeWidth={3} />
-                </button>
-                <button
-                  onClick={() => setShowFeedback(true)}
-                  className="bouncy-button"
-                  style={{
-                    border: 'none',
-                    borderRadius: '14px',
-                    padding: '10px',
-                    background: 'linear-gradient(135deg, #FF8A65, #FFD54F)',
-                    color: 'white',
-                    boxShadow: '0 4px 12px rgba(255,138,101,0.28)',
-                    cursor: 'pointer',
-                  }}
-                  aria-label="Feedback"
-                >
-                  <MessageSquare size={16} strokeWidth={3} />
-                </button>
-              </div>
             </div>
 
             <section style={{ marginBottom: '16px' }}>
@@ -633,136 +650,183 @@ export default function Home() {
             </section>
 
             {mainPick && (
-              <section style={{ display: 'grid', gap: '12px' }}>
-                <PickCard
-                  place={mainPick}
-                  rank="Best pick right now"
-                  area={area}
-                  context={context}
-                  onDetails={() => setSelectedPlace(mainPick)}
-                  onNavigate={() => setNavPlace(mainPick)}
-                  onChangeAnswer={() => setShowTweaks(prev => !prev)}
-                />
+              <>
+                {/* Desktop: Two-column layout with card list + detail. Mobile: Single column card flow */}
+                <section style={{
+                  display: 'grid',
+                  gridTemplateColumns: isDesktop && selectedPlace ? '35% 65%' : '1fr',
+                  gap: isDesktop && selectedPlace ? '14px' : '12px',
+                }}>
+                  {/* Card flow - always visible */}
+                  <section style={{ display: 'grid', gap: '12px', overflowY: 'auto' }}>
+                    <PickCard
+                      place={mainPick}
+                      rank="Best pick right now"
+                      area={area}
+                      context={context}
+                      onDetails={() => setSelectedPlace(mainPick)}
+                      onNavigate={() => setNavPlace(mainPick)}
+                      onChangeAnswer={() => setShowTweaks(prev => !prev)}
+                      onViewMap={!isDesktop ? (place) => {
+                        setMapModalPlace(place);
+                        setShowMapModal(true);
+                      } : undefined}
+                      isPreview={isDesktop && selectedPlace ? true : false}
+                    />
 
-                <AnimatePresence initial={false}>
-                  {showTweaks && (
-                    <motion.section
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ type: 'spring', damping: 24 }}
-                      style={{
-                        display: 'grid',
-                        gap: '9px',
-                        background: 'rgba(255,255,255,0.72)',
-                        borderRadius: '20px',
-                        padding: '12px',
-                        boxShadow: '0 8px 24px rgba(34,34,34,0.06)',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {[
-                        ['Kid age', AGE_FILTERS, age, setAge],
-                        ['Starting area', AREA_FILTERS, area, setArea],
-                        ['Time today', TIME_FILTERS, time, setTime],
-                        ['Today feels like', MOOD_FILTERS, mood, setMood],
-                      ].map(([label, items, value, setter]) => (
-                        <div key={label} style={{ display: 'grid', gap: '6px' }}>
-                          <div style={{ fontSize: '11px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                            {label}
-                          </div>
-                          <div className="hide-scrollbar" style={{ display: 'flex', gap: '7px', overflowX: 'auto', paddingBottom: '2px' }}>
-                            {items.map(item => {
-                              const active = value === item.id;
+                    <AnimatePresence initial={false}>
+                      {showTweaks && !selectedPlace && (
+                        <motion.section
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ type: 'spring', damping: 24 }}
+                          style={{
+                            display: 'grid',
+                            gap: '9px',
+                            background: 'rgba(255,255,255,0.72)',
+                            borderRadius: '20px',
+                            padding: '12px',
+                            boxShadow: '0 8px 24px rgba(34,34,34,0.06)',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {[
+                            ['Kid age', AGE_FILTERS, age, setAge],
+                            ['Starting area', AREA_FILTERS, area, setArea],
+                            ['Time today', TIME_FILTERS, time, setTime],
+                            ["Today's energy", ENERGY_FILTERS, energy, setEnergy],
+                          ].map(([label, items, value, setter]) => (
+                            <div key={label} style={{ display: 'grid', gap: '6px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
+                                {label}
+                              </div>
+                              <div className="hide-scrollbar" style={{ display: 'flex', gap: '7px', overflowX: 'auto', paddingBottom: '2px' }}>
+                                {items.map(item => {
+                                  const active = value === item.id;
+                                  return (
+                                    <button
+                                      key={item.id}
+                                      onClick={() => setter(item.id)}
+                                      className="bouncy-button"
+                                      style={{
+                                        flexShrink: 0,
+                                        border: 'none',
+                                        borderRadius: '999px',
+                                        padding: '8px 11px',
+                                        background: active ? 'linear-gradient(135deg, #FF8A65, #FFD54F)' : 'white',
+                                        color: active ? 'white' : '#555',
+                                        fontFamily: 'Nunito, sans-serif',
+                                        fontSize: '12px',
+                                        fontWeight: 900,
+                                        cursor: 'pointer',
+                                        boxShadow: active ? '0 7px 18px rgba(255,138,101,0.26)' : '0 4px 12px rgba(0,0,0,0.05)',
+                                      }}
+                                    >
+                                      {item.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => setRecommendationOffset(prev => prev + 1)}
+                            className="bouncy-button"
+                            style={{
+                              border: 'none',
+                              borderRadius: '14px',
+                              padding: '11px 12px',
+                              background: 'var(--charcoal)',
+                              color: 'white',
+                              fontFamily: 'Nunito, sans-serif',
+                              fontSize: '13px',
+                              fontWeight: 900,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Show me another good spot
+                          </button>
+
+                          <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
+                              Two backup picks
+                            </div>
+                            {backupPicks.map((place, index) => {
+                              const contrastReason = getBackupContrastReason(index);
                               return (
-                                <button
-                                  key={item.id}
-                                  onClick={() => setter(item.id)}
-                                  className="bouncy-button"
-                                  style={{
-                                    flexShrink: 0,
-                                    border: 'none',
-                                    borderRadius: '999px',
-                                    padding: '8px 11px',
-                                    background: active ? 'linear-gradient(135deg, #FF8A65, #FFD54F)' : 'white',
-                                    color: active ? 'white' : '#555',
-                                    fontFamily: 'Nunito, sans-serif',
-                                    fontSize: '12px',
-                                    fontWeight: 900,
-                                    cursor: 'pointer',
-                                    boxShadow: active ? '0 7px 18px rgba(255,138,101,0.26)' : '0 4px 12px rgba(0,0,0,0.05)',
-                                  }}
-                                >
-                                  {item.label}
-                                </button>
+                                <PickCard
+                                  key={place.id}
+                                  place={place}
+                                  rank={`${contrastReason.icon} ${contrastReason.text}`}
+                                  variant="backup"
+                                  area={area}
+                                  context={context}
+                                  onDetails={() => setSelectedPlace(place)}
+                                  onNavigate={() => setNavPlace(place)}
+                                  onViewMap={!isDesktop ? (place) => {
+                                    setMapModalPlace(place);
+                                    setShowMapModal(true);
+                                  } : undefined}
+                                />
                               );
                             })}
                           </div>
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => setRecommendationOffset(prev => prev + 1)}
-                        className="bouncy-button"
-                        style={{
-                          border: 'none',
-                          borderRadius: '14px',
-                          padding: '11px 12px',
-                          background: 'var(--charcoal)',
-                          color: 'white',
-                          fontFamily: 'Nunito, sans-serif',
-                          fontSize: '13px',
-                          fontWeight: 900,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Show me another good answer
-                      </button>
 
-                      <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                          Two backup picks
-                        </div>
-                        {backupPicks.map((place, index) => (
-                          <PickCard
-                            key={place.id}
-                            place={place}
-                            rank={index === 0 ? 'Good backup' : 'Another safe bet'}
-                            variant="backup"
-                            area={area}
-                            context={context}
-                            onDetails={() => setSelectedPlace(place)}
-                            onNavigate={() => setNavPlace(place)}
-                          />
-                        ))}
-                      </div>
+                          <button
+                            onClick={() => setShowAllOnMap(prev => !prev)}
+                            className="bouncy-button"
+                            style={{
+                              border: 'none',
+                              borderRadius: '16px',
+                              padding: '13px',
+                              background: 'white',
+                              color: 'var(--charcoal)',
+                              fontFamily: 'Nunito, sans-serif',
+                              fontSize: '14px',
+                              fontWeight: 900,
+                              cursor: 'pointer',
+                              boxShadow: '0 5px 16px rgba(0,0,0,0.07)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '8px',
+                            }}
+                          >
+                            <MapPinned size={17} strokeWidth={3} />
+                            {showAllOnMap ? 'Show only these 3 picks' : 'Explore full map'}
+                          </button>
+                        </motion.section>
+                      )}
+                    </AnimatePresence>
+                  </section>
 
-                      <button
-                        onClick={() => setShowAllOnMap(prev => !prev)}
-                        className="bouncy-button"
-                        style={{
-                          border: 'none',
-                          borderRadius: '16px',
-                          padding: '13px',
-                          background: 'white',
-                          color: 'var(--charcoal)',
-                          fontFamily: 'Nunito, sans-serif',
-                          fontSize: '14px',
-                          fontWeight: 900,
-                          cursor: 'pointer',
-                          boxShadow: '0 5px 16px rgba(0,0,0,0.07)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                        }}
-                      >
-                        <MapPinned size={17} strokeWidth={3} />
-                        {showAllOnMap ? 'Show only these 3 picks' : 'Explore full map'}
-                      </button>
-                    </motion.section>
+                  {/* PlaceDetail sidebar - only on desktop when selected */}
+                  {isDesktop && selectedPlace && (
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ type: 'spring', damping: 24 }}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflowY: 'auto',
+                      }}
+                    >
+                      <PlaceDetail
+                        place={selectedPlace}
+                        isFavorite={favorites.includes(selectedPlace.id)}
+                        onToggleFavorite={() => toggleFavorite(selectedPlace.id)}
+                        onClose={() => setSelectedPlace(null)}
+                        onNavigate={() => setNavPlace(selectedPlace)}
+                        driveText={driveEstimate(selectedPlace, area).value}
+                        variant="sidebar"
+                      />
+                    </motion.div>
                   )}
-                </AnimatePresence>
-              </section>
+                </section>
+              </>
             )}
           </motion.main>
 
@@ -775,6 +839,18 @@ export default function Home() {
               selectedPlace={selectedPlace}
               onPinClick={setSelectedPlace}
             />
+            <div
+              onClick={() => setShowMapFullscreen(prev => !prev)}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 5,
+                cursor: 'pointer',
+                display: 'none',
+              }}
+              className="map-toggle-overlay"
+            />
+            {/* Map info label */}
             <div style={{
               position: 'absolute',
               top: '18px',
@@ -804,6 +880,100 @@ export default function Home() {
               }}>
                 Showing {showAllOnMap ? 'all matching places' : 'the main pick and 2 backups'}.
               </div>
+            </div>
+
+            {/* Right sidebar: Tip Jar + Saved Spots */}
+            <div style={{
+              position: 'absolute',
+              top: '18px',
+              right: '18px',
+              zIndex: 7,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              maxWidth: '280px',
+              pointerEvents: 'auto',
+            }}>
+              {/* Tip Jar Button */}
+              <button
+                onClick={() => setShowTipJar(true)}
+                className="bouncy-button"
+                style={{
+                  border: 'none',
+                  borderRadius: '18px',
+                  padding: '14px',
+                  background: 'white',
+                  color: 'var(--charcoal)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontFamily: 'Nunito, sans-serif',
+                  fontSize: '13px',
+                  fontWeight: 900,
+                }}
+              >
+                <Coffee size={18} strokeWidth={3} />
+                Support us
+              </button>
+
+              {/* Saved Spots Section */}
+              {favorites.length > 0 && (
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: '18px',
+                  padding: '14px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  backdropFilter: 'blur(8px)',
+                }}>
+                  <div style={{
+                    fontSize: '12px',
+                    fontWeight: 900,
+                    color: '#999',
+                    textTransform: 'uppercase',
+                    marginBottom: '10px',
+                  }}>
+                    Saved spots ({favorites.length})
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                  }}>
+                    {PLACES.filter(p => favorites.includes(p.id)).map(place => (
+                      <button
+                        key={place.id}
+                        onClick={() => setSelectedPlace(place)}
+                        className="bouncy-button"
+                        style={{
+                          border: 'none',
+                          borderRadius: '12px',
+                          padding: '10px',
+                          background: 'linear-gradient(135deg, ' + place.color.primary + '22, ' + place.color.light + ')',
+                          color: 'var(--charcoal)',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          fontFamily: 'Nunito, sans-serif',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <span style={{ fontSize: '16px' }}>{place.emoji}</span>
+                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {place.nameEn || place.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </aside>
         </div>
@@ -861,55 +1031,101 @@ export default function Home() {
           )}
         </AnimatePresence>
 
+        {/* Mobile: Show PlaceDetail as bottom sheet on mobile only (≤820px) */}
         <AnimatePresence>
-          {selectedPlace && (
+          {selectedPlace && !isDesktop && (
             <PlaceDetail
               place={selectedPlace}
               isFavorite={favorites.includes(selectedPlace.id)}
               onToggleFavorite={() => toggleFavorite(selectedPlace.id)}
               onClose={() => setSelectedPlace(null)}
               onNavigate={() => setNavPlace(selectedPlace)}
+              driveText={driveEstimate(selectedPlace, area).value}
+              variant="modal"
             />
           )}
         </AnimatePresence>
 
+        {/* Full-screen Map Modal for mini map preview */}
         <AnimatePresence>
-          {showFeedbackNudge && selectedPlace && !showFeedback && (
-            <motion.button
-              initial={{ opacity: 0, y: 16, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.96 }}
-              onClick={() => {
-                setFeedbackNudgeDismissed(true);
-                setShowFeedbackNudge(false);
-                setShowFeedback(true);
-              }}
-              className="bouncy-button"
-              style={{
-                position: 'fixed',
-                left: '18px',
-                right: '18px',
-                bottom: 'max(18px, env(safe-area-inset-bottom))',
-                zIndex: 75,
-                border: 'none',
-                borderRadius: '18px',
-                background: 'linear-gradient(135deg, #FF8A65, #FFD54F)',
-                color: 'white',
-                boxShadow: '0 12px 32px rgba(255, 138, 101, 0.35)',
-                padding: '13px 16px',
-                fontFamily: 'Nunito, sans-serif',
-                fontSize: '14px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-              }}
-            >
-              <MessageSquare size={16} strokeWidth={3} />
-              Was this useful? Tell us →
-            </motion.button>
+          {showMapModal && mapModalPlace && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowMapModal(false)}
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.5)',
+                  zIndex: 100,
+                  backdropFilter: 'blur(4px)',
+                  WebkitBackdropFilter: 'blur(4px)',
+                }}
+              />
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 26 }}
+                style={{
+                  position: 'fixed',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 110,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  maxHeight: '90vh',
+                }}
+              >
+                <div style={{
+                  width: '100%',
+                  background: 'white',
+                  borderTopLeftRadius: '24px',
+                  borderTopRightRadius: '24px',
+                  padding: '12px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderBottom: '1px solid rgba(0,0,0,0.06)',
+                }}>
+                  <div style={{ fontSize: '16px', fontWeight: 900, color: 'var(--charcoal)' }}>
+                    {mapModalPlace.nameEn || mapModalPlace.name}
+                  </div>
+                  <button
+                    onClick={() => setShowMapModal(false)}
+                    className="bouncy-button"
+                    style={{
+                      background: 'var(--cream)',
+                      border: 'none',
+                      borderRadius: '999px',
+                      width: '32px',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <X size={18} strokeWidth={2.5} color="#999" />
+                  </button>
+                </div>
+                <div style={{
+                  flex: 1,
+                  position: 'relative',
+                  minHeight: '400px',
+                  width: '100%',
+                }}>
+                  <KiddoMap
+                    places={[mapModalPlace]}
+                    selectedPlace={mapModalPlace}
+                    onPinClick={() => {}}
+                  />
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
 
@@ -923,12 +1139,6 @@ export default function Home() {
         </AnimatePresence>
 
         <AnimatePresence>
-          {showFeedback && (
-            <FeedbackSheet onClose={() => setShowFeedback(false)} />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
           {showTipJar && (
             <TipJarSheet onClose={() => setShowTipJar(false)} />
           )}
@@ -936,7 +1146,24 @@ export default function Home() {
 
         <style jsx>{`
           @media (max-width: 820px) {
-            div[style*='grid-template-columns: minmax(390px, 460px) 1fr'] {
+            div[data-map-fullscreen='false'] {
+              display: block !important;
+            }
+
+            div[data-map-fullscreen='true'] main {
+              display: none !important;
+            }
+
+            div[data-map-fullscreen='true'] aside {
+              opacity: 1 !important;
+              pointer-events: auto !important;
+            }
+
+            div[data-map-fullscreen='true'] .map-toggle-overlay {
+              display: none !important;
+            }
+
+            .map-toggle-overlay {
               display: block !important;
             }
 
@@ -945,6 +1172,7 @@ export default function Home() {
               height: 100% !important;
               padding: 14px !important;
               padding-top: max(14px, env(safe-area-inset-top)) !important;
+              transition: opacity 0.2s ease !important;
             }
 
             aside {
@@ -953,6 +1181,7 @@ export default function Home() {
               z-index: 1 !important;
               opacity: 0.22 !important;
               pointer-events: none !important;
+              transition: opacity 0.2s ease !important;
             }
           }
         `}</style>

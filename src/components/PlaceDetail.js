@@ -1,433 +1,582 @@
 import { motion } from 'framer-motion';
-import { X, Heart, Navigation, Star, Clock, Users, DollarSign } from 'lucide-react';
+import { X, Heart, Navigation, Clock, Users, DollarSign, MapPin, ExternalLink, Star } from 'lucide-react';
 
-export default function PlaceDetail({ place, isFavorite, onToggleFavorite, onClose, onNavigate }) {
+const TICKET_GUIDES = {
+  'aquaria-klcc': {
+    title: 'Buy ticket before you go',
+    option: 'Official site first',
+    note: 'Mobile tickets beat queueing with kids.',
+    url: 'https://aquariaklcc.com',
+  },
+  petrosains: {
+    title: 'Book your slot online',
+    option: 'Official Petrosains tickets',
+    note: 'Weekend sessions fill up.',
+    url: 'https://petrosains.com.my',
+  },
+  kidzania: {
+    title: 'Buy ticket before you go',
+    option: 'Official site or Klook',
+    note: 'Go early — more role-play time.',
+    url: 'https://www.kidzania.com.my',
+  },
+  'sunway-lagoon': {
+    title: 'Buy ticket before you go',
+    option: 'Official site or Klook',
+    note: 'Online tickets save real time.',
+    url: 'https://sunwaylagoon.com',
+  },
+};
+
+function getParentQuote(place) {
+  if (place.facilities.aircon >= 4 && place.indoor) return 'Parents like: cool indoors when KL gets hot.';
+  if (place.facilities.stroller >= 4) return 'Parents like: stroller-friendly paths.';
+  if (place.facilities.restroom >= 4) return 'Parents like: toilets are easy to find.';
+  if (place.facilities.food >= 4) return 'Parents like: food nearby.';
+  return `Parents like: ${place.tagline.toLowerCase()}.`;
+}
+
+function getTicketGuide(place) {
+  if (place.cost === 0) {
+    return {
+      title: 'No ticket needed',
+      option: 'Just check opening conditions',
+      note: 'Free places are fastest when weather and timing match.',
+      url: null,
+    };
+  }
+  return TICKET_GUIDES[place.id] || {
+    title: 'Check tickets before you go',
+    option: 'Official site first',
+    note: 'If official tickets exist, use them before Klook or Traveloka.',
+    url: null,
+  };
+}
+
+export default function PlaceDetail({
+  place,
+  isFavorite,
+  onToggleFavorite,
+  onClose,
+  onNavigate,
+  driveText = 'Pick your start area',
+  variant = 'modal', // 'modal' for mobile, 'sidebar' for desktop
+}) {
+  const parentQuote = getParentQuote(place);
+  const ticket = getTicketGuide(place);
+  const isSidebar = variant === 'sidebar';
+
   return (
     <>
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.4)',
-          zIndex: 50,
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)',
-        }}
-      />
-
-      {/* Detail panel */}
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          maxHeight: '88vh',
-          background: 'white',
-          borderTopLeftRadius: '32px',
-          borderTopRightRadius: '32px',
-          zIndex: 60,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.2)',
-        }}
-      >
-        {/* Top image and close button */}
-        <div style={{
-          position: 'relative',
-          height: '220px',
-          background: `linear-gradient(135deg, ${place.color.primary}, ${place.color.dark})`,
-          flexShrink: 0,
-        }}>
-          {/* Image */}
-          <img
-            src={place.image}
-            alt={place.nameEn || place.name}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: 0.85,
-            }}
-            onError={(e) => { e.target.style.display = 'none'; }}
-          />
-          
-          {/* Gradient overlay */}
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%)',
-          }} />
-
-          {/* Top actions */}
-          <div style={{
-            position: 'absolute',
-            top: '16px',
-            left: '16px',
-            right: '16px',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}>
-            {/* Handle */}
-            <div style={{
-              position: 'absolute',
-              top: '-8px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '40px',
-              height: '4px',
-              background: 'rgba(255,255,255,0.6)',
-              borderRadius: '999px',
-            }} />
-            
-            {/* Category */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              color: place.color.dark,
-              padding: '6px 14px',
-              borderRadius: '999px',
-              fontSize: '12px',
-              fontWeight: 800,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            }}>
-              {place.emoji} {place.category}
-            </div>
-
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="bouncy-button"
-              style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                border: 'none',
-                borderRadius: '999px',
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: 'var(--charcoal)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              }}
-            >
-              <X size={18} strokeWidth={3} />
-            </button>
-          </div>
-
-          {/* Name */}
-          <div style={{
-            position: 'absolute',
-            bottom: '20px',
-            left: '20px',
-            right: '20px',
-            color: 'white',
-          }}>
-            <div style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              opacity: 0.9,
-              marginBottom: '4px',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-            }}>
-              {place.tagline}
-            </div>
-            <h2 style={{
-              fontSize: '26px',
-              fontWeight: 900,
-              fontFamily: 'Fredoka, sans-serif',
-              margin: 0,
-              textShadow: '0 2px 6px rgba(0,0,0,0.3)',
-            }}>
-              {place.nameEn || place.name}
-            </h2>
-          </div>
-        </div>
-
-        {/* Scrollable content */}
-        <div
-          className="hide-scrollbar"
+      {/* Backdrop only for modal variant (mobile) */}
+      {!isSidebar && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
           style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '20px',
-            paddingBottom: '120px',
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.42)',
+            zIndex: 50,
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
           }}
-        >
-          {/* Rating cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '10px',
-            marginBottom: '16px',
-          }}>
-            <div style={{
-              background: place.color.light,
-              padding: '12px 14px',
-              borderRadius: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
-              <Star size={16} fill={place.color.dark} color={place.color.dark} />
-              <div>
-                <div style={{ fontSize: '10px', color: '#666', fontWeight: 600 }}>Google</div>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: place.color.dark }}>
-                  {place.googleRating}
-                  <span style={{ fontSize: '10px', color: '#999', fontWeight: 600, marginLeft: '4px' }}>
-                    ({place.googleReviewCount > 1000 ? `${(place.googleReviewCount/1000).toFixed(1)}k` : place.googleReviewCount})
-                  </span>
-                </div>
-              </div>
-            </div>
+        />
+      )}
 
-            <div style={{
-              background: place.color.light,
-              padding: '12px 14px',
-              borderRadius: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
-              <span style={{ fontSize: '18px' }}>👶</span>
-              <div>
-                <div style={{ fontSize: '10px', color: '#666', fontWeight: 600 }}>Kiddo score</div>
-                <div style={{ fontSize: '15px', fontWeight: 800, color: place.color.dark }}>
-                  {place.ourRating} <span style={{ fontSize: '10px', color: '#999' }}>/ 5</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Key info */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gap: '8px',
-            marginBottom: '20px',
-          }}>
-            <InfoChip icon={<DollarSign size={14} />} label="Cost" value={place.costLabel} color={place.color.dark} />
-            <InfoChip icon={<Clock size={14} />} label="Time" value={`${place.durationHours}h`} color={place.color.dark} />
-            <InfoChip icon={<Users size={14} />} label="Age" value={`${place.ageMin}-${place.ageMax}`} color={place.color.dark} />
-          </div>
-
-          {/* Description */}
-          <div style={{
-            background: 'var(--cream)',
-            borderRadius: '20px',
-            padding: '16px 18px',
-            marginBottom: '20px',
-          }}>
-            <div style={{
-              fontSize: '11px',
-              fontWeight: 800,
-              color: place.color.dark,
-              marginBottom: '8px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}>
-              ✨ Why kids like it
-            </div>
-            <div style={{
-              fontSize: '14px',
-              lineHeight: 1.7,
-              color: 'var(--charcoal)',
-              fontWeight: 500,
-            }}>
-              {place.description}
-            </div>
-          </div>
-
-          {/* Highlights */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{
-              fontSize: '11px',
-              fontWeight: 800,
-              color: '#999',
-              marginBottom: '12px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              padding: '0 4px',
-            }}>
-              💡 Tiny parent notes
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {place.highlights.map((h, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  style={{
-                    background: 'white',
-                    border: `2px solid ${place.color.light}`,
-                    padding: '12px 14px',
-                    borderRadius: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                  }}
-                >
-                  <div style={{
-                    width: '36px',
-                    height: '36px',
-                    background: place.color.light,
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '18px',
-                    flexShrink: 0,
-                  }}>
-                    {h.emoji}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      color: place.color.dark,
-                      marginBottom: '2px',
-                    }}>
-                      {h.text}
-                    </div>
-                    <div style={{
-                      fontSize: '13px',
-                      color: 'var(--charcoal)',
-                      fontWeight: 500,
-                    }}>
-                      {h.detail}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Family facilities */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{
-              fontSize: '11px',
-              fontWeight: 800,
-              color: '#999',
-              marginBottom: '12px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              padding: '0 4px',
-            }}>
-              🏠 Parent-friendly bits
-            </div>
-            <div style={{
-              background: 'white',
-              border: `2px solid ${place.color.light}`,
-              borderRadius: '20px',
-              padding: '16px',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '14px',
-            }}>
-              <FacilityItem emoji="👶" label="Stroller" level={place.facilities.stroller} color={place.color.dark} />
-              <FacilityItem emoji="🍼" label="Nursing" level={place.facilities.nursing} color={place.color.dark} />
-              <FacilityItem emoji="🚼" label="Diaper" level={place.facilities.diaper} color={place.color.dark} />
-              <FacilityItem emoji="❄️" label="A/C" level={place.facilities.aircon} color={place.color.dark} />
-              <FacilityItem emoji="🍽️" label="Food" level={place.facilities.food} color={place.color.dark} />
-              <FacilityItem emoji="🚻" label="Toilets" level={place.facilities.restroom} color={place.color.dark} />
-            </div>
-          </div>
-
-          {/* Address */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '8px',
-            padding: '12px',
-            background: 'var(--cream)',
-            borderRadius: '14px',
-            fontSize: '12px',
-            color: '#666',
-            fontWeight: 500,
-          }}>
-            <span>📍</span>
-            <span>{place.address}</span>
-          </div>
-        </div>
-
-        {/* Fixed bottom buttons */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: 'white',
-          borderTop: '1px solid rgba(0,0,0,0.05)',
-          padding: '14px 20px',
-          paddingBottom: 'max(14px, env(safe-area-inset-bottom))',
-          display: 'flex',
-          gap: '10px',
-        }}>
-          <button
-            onClick={onToggleFavorite}
-            className="bouncy-button"
-            style={{
-              width: '54px',
-              height: '54px',
-              background: isFavorite ? '#FFE0E0' : 'var(--cream)',
-              border: 'none',
-              borderRadius: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              flexShrink: 0,
-              transition: 'all 0.2s',
-            }}
-          >
-            <Heart 
-              size={22} 
-              fill={isFavorite ? '#FF6B6B' : 'transparent'} 
-              color={isFavorite ? '#FF6B6B' : '#999'} 
-              strokeWidth={2.5}
+      <motion.div
+        className={`place-detail-shell ${isSidebar ? 'place-detail-sidebar' : ''}`}
+        initial={isSidebar ? { opacity: 0 } : { y: '100%' }}
+        animate={isSidebar ? { opacity: 1 } : { y: 0 }}
+        exit={isSidebar ? { opacity: 0 } : { y: '100%' }}
+        transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+      >
+        <div className="place-detail-card">
+          <div className="place-hero" style={{ background: `linear-gradient(135deg, ${place.color.primary}, ${place.color.dark})` }}>
+            <img
+              src={place.image}
+              alt={place.nameEn || place.name}
+              className="place-hero-image"
+              onError={(event) => { event.currentTarget.style.display = 'none'; }}
             />
-          </button>
-          
-          <button
-            onClick={onNavigate}
-            className="bouncy-button"
-            style={{
-              flex: 1,
-              background: `linear-gradient(135deg, ${place.color.primary}, ${place.color.dark})`,
-              border: 'none',
-              borderRadius: '18px',
-              padding: '0 20px',
-              color: 'white',
-              fontSize: '15px',
-              fontWeight: 800,
-              fontFamily: 'Nunito, sans-serif',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              height: '54px',
-              boxShadow: `0 8px 20px ${place.color.primary}55`,
-            }}
-          >
-            <Navigation size={18} strokeWidth={3} />
-            Take me there
-          </button>
+            <div className="place-hero-overlay" />
+
+            <div className="place-top-actions">
+              <div className="place-pill" style={{ color: place.color.dark }}>
+                {place.emoji} {place.category}
+              </div>
+              <button onClick={onClose} className="round-button bouncy-button" aria-label="Close">
+                <X size={18} strokeWidth={3} />
+              </button>
+            </div>
+
+            <div className="place-title">
+              <div className="place-tagline">{place.tagline}</div>
+              <h2>{place.nameEn || place.name}</h2>
+            </div>
+          </div>
+
+          <div className="place-content">
+            {/* 1. Should we go? */}
+            <div className="decision-card" style={{ borderColor: `${place.color.primary}33` }}>
+              <div className="section-eyebrow" style={{ color: place.color.dark }}>Should we go?</div>
+              <h3>Good choice if you want {place.indoor ? 'a low-weather-risk plan.' : 'fresh air before it gets hot.'}</h3>
+              <p>{place.description}</p>
+
+              <div className="parent-quote">
+                <Star size={14} fill={place.color.dark} color={place.color.dark} />
+                <span>
+                  <strong>{place.googleRating}</strong> · {place.googleReviewCount > 1000 ? `${(place.googleReviewCount / 1000).toFixed(1)}k` : place.googleReviewCount} reviews — {parentQuote}
+                </span>
+              </div>
+
+              <div className="metric-grid">
+                <InfoChip icon={<DollarSign size={14} />} label="Cost" value={place.costLabel} color={place.color.dark} />
+                <InfoChip icon={<Clock size={14} />} label="Time" value={`${place.durationHours}h`} color={place.color.dark} />
+                <InfoChip icon={<Users size={14} />} label="Age" value={`${place.ageMin}-${place.ageMax}`} color={place.color.dark} />
+              </div>
+            </div>
+
+            {/* 2. Drive check */}
+            <div className="drive-card" style={{ background: place.color.light }}>
+              <MapPin size={18} color={place.color.dark} />
+              <div>
+                <div className="mini-label" style={{ color: place.color.dark }}>Drive check</div>
+                <strong>{driveText}</strong>
+                <span>{place.address}</span>
+              </div>
+            </div>
+
+            {/* 3. Before you go */}
+            <div className="before-card">
+              <div className="before-head">
+                <div className="section-title">Before you go</div>
+                <img
+                  src={place.image}
+                  alt=""
+                  className="before-thumb"
+                  onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                />
+              </div>
+              <BeforeItem label={ticket.title} value={ticket.option} note={ticket.note} />
+              <BeforeItem
+                label="Best timing"
+                value={place.indoor ? 'Book earlier, go before lunch' : 'Go morning or late afternoon'}
+                note={place.indoor ? 'Less queueing, less tired kids.' : 'Better weather and fewer meltdowns.'}
+              />
+              {place.packingTips && place.packingTips.length > 0 && (
+                <BeforeItem
+                  label="What to pack"
+                  value={place.packingTips[0]}
+                  note={place.packingTips.length > 1 ? place.packingTips.slice(1).join(' · ') : ''}
+                />
+              )}
+              {ticket.url && (
+                <a className="ticket-link bouncy-button" href={ticket.url} target="_blank" rel="noreferrer">
+                  Open ticket site
+                  <ExternalLink size={15} strokeWidth={3} />
+                </a>
+              )}
+            </div>
+          </div>
+
+          <div className="bottom-actions">
+            <div className="bottom-actions-inner">
+              <button onClick={onToggleFavorite} className="save-button bouncy-button" aria-label="Save place">
+                <Heart
+                  size={22}
+                  fill={isFavorite ? '#FF6B6B' : 'transparent'}
+                  color={isFavorite ? '#FF6B6B' : '#999'}
+                  strokeWidth={2.5}
+                />
+              </button>
+              <button
+                onClick={onNavigate}
+                className="navigate-button bouncy-button"
+                style={{ background: `linear-gradient(135deg, ${place.color.primary}, ${place.color.dark})`, boxShadow: `0 8px 20px ${place.color.primary}55` }}
+              >
+                <Navigation size={18} strokeWidth={3} />
+                Take me there
+              </button>
+            </div>
+          </div>
         </div>
       </motion.div>
+
+      <style jsx global>{`
+        .place-detail-shell {
+          position: fixed;
+          inset: 4vh 18px 18px;
+          z-index: 60;
+          display: flex;
+          justify-content: center;
+          pointer-events: none;
+        }
+
+        /* Sidebar variant: relative positioning, flows within main section */
+        .place-detail-shell.place-detail-sidebar {
+          position: relative;
+          inset: unset;
+          z-index: auto;
+          display: block;
+          pointer-events: auto;
+          width: 100%;
+          max-height: none;
+          padding: 0;
+        }
+
+        .place-detail-card {
+          width: min(760px, 100%);
+          max-height: 92vh;
+          background: white;
+          border-radius: 28px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+          pointer-events: auto;
+        }
+
+        /* Sidebar variant: adjust card styling */
+        .place-detail-shell.place-detail-sidebar .place-detail-card {
+          width: 100%;
+          max-height: none;
+          max-height: calc(100vh - 80px);
+          border-radius: 20px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .place-hero {
+          position: relative;
+          height: 230px;
+          flex-shrink: 0;
+        }
+
+        .place-hero-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.86;
+        }
+
+        .place-hero-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.1) 45%, rgba(0,0,0,0.62) 100%);
+        }
+
+        .place-top-actions {
+          position: absolute;
+          top: 16px;
+          left: 16px;
+          right: 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .place-pill,
+        .round-button {
+          background: rgba(255, 255, 255, 0.96);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .place-pill {
+          padding: 7px 14px;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .round-button {
+          border: none;
+          border-radius: 999px;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: var(--charcoal);
+        }
+
+        .place-title {
+          position: absolute;
+          left: 24px;
+          right: 24px;
+          bottom: 22px;
+          color: white;
+        }
+
+        .place-tagline {
+          font-size: 11px;
+          font-weight: 900;
+          opacity: 0.92;
+          margin-bottom: 5px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .place-detail-card h2 {
+          font-family: Fredoka, sans-serif;
+          font-size: 31px;
+          line-height: 1.05;
+          font-weight: 900;
+          margin: 0;
+          text-shadow: 0 2px 8px rgba(0,0,0,0.28);
+        }
+
+        .place-content {
+          flex: 1;
+          overflow-y: auto;
+          padding: 20px;
+          padding-bottom: 108px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          background: #fffdf8;
+        }
+
+        .decision-card,
+        .before-card {
+          background: white;
+          border: 2px solid #eef2f7;
+          border-radius: 20px;
+          padding: 18px;
+          box-shadow: 0 8px 24px rgba(34, 34, 34, 0.05);
+        }
+
+        .decision-card {
+          border-width: 3px;
+        }
+
+        .section-eyebrow,
+        .section-title,
+        .mini-label {
+          font-size: 11px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+        }
+
+        .section-title {
+          color: #888;
+        }
+
+        .place-detail-card h3 {
+          font-family: Fredoka, sans-serif;
+          font-size: 24px;
+          line-height: 1.1;
+          margin: 6px 0 10px;
+          color: var(--charcoal);
+        }
+
+        .place-detail-card p {
+          margin: 0 0 12px;
+          color: #555;
+          font-size: 14px;
+          line-height: 1.55;
+          font-weight: 700;
+        }
+
+        .parent-quote {
+          display: flex;
+          gap: 8px;
+          align-items: flex-start;
+          background: var(--cream);
+          border-radius: 12px;
+          padding: 10px 12px;
+          margin-bottom: 14px;
+          font-size: 12px;
+          line-height: 1.4;
+          color: #555;
+          font-weight: 700;
+        }
+
+        .parent-quote strong {
+          color: var(--charcoal);
+        }
+
+        .metric-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 9px;
+        }
+
+        .drive-card {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          padding: 14px 16px;
+          border-radius: 18px;
+        }
+
+        .drive-card strong,
+        .drive-card span {
+          display: block;
+        }
+
+        .drive-card strong {
+          color: var(--charcoal);
+          font-size: 15px;
+          margin: 4px 0 2px;
+          font-weight: 900;
+        }
+
+        .drive-card span {
+          color: #666;
+          font-size: 12px;
+          line-height: 1.35;
+          font-weight: 700;
+        }
+
+        .before-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+
+        .before-thumb {
+          width: 56px;
+          height: 56px;
+          border-radius: 14px;
+          object-fit: cover;
+        }
+
+        .before-item {
+          display: grid;
+          gap: 3px;
+          padding: 10px 0;
+          border-bottom: 1px solid #f1f1f1;
+        }
+
+        .before-item:last-of-type {
+          border-bottom: none;
+        }
+
+        .before-item span {
+          color: #666;
+          font-size: 12px;
+          line-height: 1.35;
+          font-weight: 700;
+        }
+
+        .before-item strong {
+          color: var(--charcoal);
+          font-size: 14px;
+        }
+
+        .ticket-link {
+          margin-top: 12px;
+          border: none;
+          border-radius: 15px;
+          min-height: 44px;
+          background: var(--charcoal);
+          color: white;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          font-weight: 900;
+          font-size: 13px;
+        }
+
+        .bottom-actions {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(255,255,255,0.96);
+          border-top: 1px solid rgba(0,0,0,0.06);
+          padding: 14px 20px;
+          padding-bottom: max(14px, env(safe-area-inset-bottom));
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        /* Sidebar variant: static positioning for actions */
+        .place-detail-shell.place-detail-sidebar .bottom-actions {
+          position: relative;
+          padding: 14px 20px;
+          padding-bottom: 14px;
+        }
+
+        .bottom-actions-inner {
+          display: grid;
+          grid-template-columns: 58px minmax(0, 360px);
+          gap: 10px;
+          width: 100%;
+          max-width: 480px;
+        }
+
+        .save-button,
+        .navigate-button {
+          border: none;
+          border-radius: 18px;
+          height: 54px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .save-button {
+          background: var(--cream);
+        }
+
+        .navigate-button {
+          color: white;
+          font-size: 15px;
+          font-weight: 900;
+          font-family: Nunito, sans-serif;
+          gap: 8px;
+        }
+
+        @media (max-width: 820px) {
+          .place-detail-shell {
+            inset: auto 0 0;
+          }
+
+          .place-detail-card {
+            width: 100%;
+            max-height: 88vh;
+            border-radius: 32px 32px 0 0;
+          }
+
+          .place-hero {
+            height: 220px;
+          }
+
+          .place-content {
+            padding: 18px;
+            padding-bottom: 112px;
+          }
+
+          .place-detail-card h2 {
+            font-size: 27px;
+          }
+
+          .place-detail-card h3 {
+            font-size: 22px;
+          }
+        }
+      `}</style>
     </>
+  );
+}
+
+function BeforeItem({ label, value, note }) {
+  return (
+    <div className="before-item">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <span>{note}</span>
+    </div>
   );
 }
 
@@ -446,28 +595,6 @@ function InfoChip({ icon, label, value, color }) {
       </div>
       <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--charcoal)' }}>
         {value}
-      </div>
-    </div>
-  );
-}
-
-function FacilityItem({ emoji, label, level, color }) {
-  return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: '20px', marginBottom: '4px' }}>{emoji}</div>
-      <div style={{ fontSize: '10px', color: '#666', fontWeight: 600, marginBottom: '4px' }}>{label}</div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '2px' }}>
-        {[1,2,3,4,5].map(i => (
-          <div
-            key={i}
-            style={{
-              width: '5px',
-              height: '5px',
-              borderRadius: '50%',
-              background: i <= level ? color : '#E0E0E0',
-            }}
-          />
-        ))}
       </div>
     </div>
   );

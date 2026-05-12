@@ -89,10 +89,17 @@ export default function TipJarSheet({ onClose }) {
           bottom: 0,
           left: 0,
           right: 0,
+          zIndex: 110,
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+      <div style={{
+          width: '100%',
+          maxWidth: '480px',
           background: 'white',
           borderTopLeftRadius: '32px',
           borderTopRightRadius: '32px',
-          zIndex: 110,
           padding: '20px',
           paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
           boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.2)',
@@ -212,6 +219,7 @@ export default function TipJarSheet({ onClose }) {
             Tip Jar is ready. Add a Polar Checkout Link and these buttons will start taking tips.
           </div>
         )}
+      </div>
       </motion.div>
     </>
   );

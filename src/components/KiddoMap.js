@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { motion } from 'framer-motion';
+import { PLACES } from '../data/places';
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
 export default function KiddoMap({ places, selectedPlace, onPinClick }) {
   const mapContainer = useRef(null);
@@ -196,7 +197,7 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
     });
 
     // 如果有地点，自动调整视野
-    if (places.length > 0 && places.length < PLACES_FULL_COUNT) {
+    if (places.length > 0 && places.length < PLACES.length) {
       const bounds = new mapboxgl.LngLatBounds();
       places.forEach(p => bounds.extend(p.coordinates));
       map.current.fitBounds(bounds, { padding: 100, duration: 800 });
@@ -254,5 +255,3 @@ export default function KiddoMap({ places, selectedPlace, onPinClick }) {
     </div>
   );
 }
-
-const PLACES_FULL_COUNT = 21;

@@ -4,13 +4,22 @@ import { X } from 'lucide-react';
 export default function NavigationSheet({ place, onClose }) {
   const [lng, lat] = place.coordinates;
 
+  // Detect if running in PWA/App mode
+  const isApp = typeof window !== 'undefined' && (
+    window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches
+  );
+
   // Google Maps URL
-  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${place.id}&travelmode=driving`;
-  
-  // Waze URL  
+  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+
+  // Waze URL
   const wazeUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes&zoom=17`;
 
-  const grabUrl = 'https://www.grab.com/my/consumer/transport/';
+  // Grab URL - use app deep link in app mode, web link otherwise
+  const grabUrl = isApp
+    ? `grab://search?latitude=${lat}&longitude=${lng}`
+    : 'https://www.grab.com/my/consumer/transport/';
 
   const handleNavigate = (url) => {
     window.open(url, '_blank');
@@ -46,12 +55,20 @@ export default function NavigationSheet({ place, onClose }) {
           bottom: 0,
           left: 0,
           right: 0,
+          zIndex: 110,
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+      <div style={{
+          width: '100%',
+          maxWidth: '480px',
           background: 'white',
           borderTopLeftRadius: '32px',
           borderTopRightRadius: '32px',
-          zIndex: 110,
           padding: '20px',
           paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
+          boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.15)',
         }}
       >
         {/* Handle */}
@@ -176,46 +193,48 @@ export default function NavigationSheet({ place, onClose }) {
             <div style={{ fontSize: '20px' }}>→</div>
           </button>
 
-          {/* Grab */}
-          <button
-            onClick={() => handleNavigate(grabUrl)}
-            className="bouncy-button"
-            style={{
-              background: 'linear-gradient(135deg, #00B14F, #008C3A)',
-              border: 'none',
-              borderRadius: '20px',
-              padding: '18px 20px',
-              color: 'white',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '14px',
-              boxShadow: '0 6px 20px rgba(0, 177, 79, 0.28)',
-              fontFamily: 'Nunito, sans-serif',
-            }}
-          >
-            <div style={{
-              width: '44px',
-              height: '44px',
-              background: 'rgba(255,255,255,0.25)',
-              borderRadius: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px',
-            }}>
-              🚕
-            </div>
-            <div style={{ flex: 1, textAlign: 'left' }}>
-              <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '2px' }}>
-                Grab
+          {/* Grab - Only show in App mode */}
+          {isApp && (
+            <button
+              onClick={() => handleNavigate(grabUrl)}
+              className="bouncy-button"
+              style={{
+                background: 'linear-gradient(135deg, #00B14F, #008C3A)',
+                border: 'none',
+                borderRadius: '20px',
+                padding: '18px 20px',
+                color: 'white',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                boxShadow: '0 6px 20px rgba(0, 177, 79, 0.28)',
+                fontFamily: 'Nunito, sans-serif',
+              }}
+            >
+              <div style={{
+                width: '44px',
+                height: '44px',
+                background: 'rgba(255,255,255,0.25)',
+                borderRadius: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+              }}>
+                🚕
               </div>
-              <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>
-                Open Grab, then search this place as your drop-off
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '2px' }}>
+                  Grab
+                </div>
+                <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>
+                  Open Grab app to request a ride
+                </div>
               </div>
-            </div>
-            <div style={{ fontSize: '20px' }}>→</div>
-          </button>
+              <div style={{ fontSize: '20px' }}>→</div>
+            </button>
+          )}
 
           {/* Cancel */}
           <button
@@ -237,6 +256,7 @@ export default function NavigationSheet({ place, onClose }) {
             Cancel
           </button>
         </div>
+      </div>
       </motion.div>
     </>
   );
