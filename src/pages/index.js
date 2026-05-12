@@ -9,6 +9,8 @@ const KiddoMap = dynamic(() => import('../components/KiddoMap'), { ssr: false })
 const PlaceDetail = dynamic(() => import('../components/PlaceDetail'), { ssr: false });
 const NavigationSheet = dynamic(() => import('../components/NavigationSheet'), { ssr: false });
 const TipJarSheet = dynamic(() => import('../components/TipJarSheet'), { ssr: false });
+const BottomSheet = dynamic(() => import('../components/BottomSheet'), { ssr: false });
+const TweakPanelContent = dynamic(() => import('../components/TweakPanelContent'), { ssr: false });
 
 const AGE_FILTERS = [
   { id: 'any', label: 'Any age' },
@@ -568,6 +570,15 @@ export default function Home() {
     () => PLACES.filter(place => favorites.includes(place.id)),
     [favorites]
   );
+  const filterGroups = useMemo(
+    () => [
+      { label: 'Kid age', items: AGE_FILTERS, value: age, onChange: setAge },
+      { label: 'Starting area', items: AREA_FILTERS, value: area, onChange: setArea },
+      { label: 'Time today', items: TIME_FILTERS, value: time, onChange: setTime },
+      { label: "Today's energy", items: ENERGY_FILTERS, value: energy, onChange: setEnergy },
+    ],
+    [age, area, time, energy]
+  );
 
   const openPlaceDetail = (place, options = {}) => {
     const { fromSaved = false } = options;
@@ -760,68 +771,12 @@ export default function Home() {
                             overflow: 'hidden',
                           }}
                         >
-                          {[
-                            ['Kid age', AGE_FILTERS, age, setAge],
-                            ['Starting area', AREA_FILTERS, area, setArea],
-                            ['Time today', TIME_FILTERS, time, setTime],
-                            ["Today's energy", ENERGY_FILTERS, energy, setEnergy],
-                          ].map(([label, items, value, setter]) => (
-                            <div key={label} style={{ display: 'grid', gap: '6px' }}>
-                              <div style={{ fontSize: '11px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                                {label}
-                              </div>
-                              <div className="hide-scrollbar" style={{ display: 'flex', gap: '7px', overflowX: 'auto', paddingBottom: '2px' }}>
-                                {items.map(item => {
-                                  const active = value === item.id;
-                                  return (
-                                    <button
-                                      key={item.id}
-                                      onClick={() => setter(item.id)}
-                                      className="bouncy-button"
-                                      style={{
-                                        flexShrink: 0,
-                                        border: 'none',
-                                        borderRadius: '999px',
-                                        padding: '8px 11px',
-                                        background: active ? 'linear-gradient(135deg, #FF8A65, #FFD54F)' : 'white',
-                                        color: active ? 'white' : '#555',
-                                        fontFamily: 'Nunito, sans-serif',
-                                        fontSize: '12px',
-                                        fontWeight: 900,
-                                        cursor: 'pointer',
-                                        boxShadow: active ? '0 7px 18px rgba(255,138,101,0.26)' : '0 4px 12px rgba(0,0,0,0.05)',
-                                      }}
-                                    >
-                                      {item.label}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                          <button
-                            onClick={() => setRecommendationOffset(prev => prev + 1)}
-                            className="bouncy-button"
-                            style={{
-                              border: 'none',
-                              borderRadius: '14px',
-                              padding: '11px 12px',
-                              background: 'var(--charcoal)',
-                              color: 'white',
-                              fontFamily: 'Nunito, sans-serif',
-                              fontSize: '13px',
-                              fontWeight: 900,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            Change answer again
-                          </button>
-
-                          <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                              Two backup picks
-                            </div>
-                            {backupPicks.map((place, index) => {
+                          <TweakPanelContent
+                            filterGroups={filterGroups}
+                            filterButtonPadding="8px 11px"
+                            onShuffle={() => setRecommendationOffset(prev => prev + 1)}
+                            backupPicks={backupPicks}
+                            renderBackupPick={(place, index) => {
                               const contrastReason = getBackupContrastReason(index);
                               return (
                                 <PickCard
@@ -833,38 +788,15 @@ export default function Home() {
                                   context={context}
                                   onDetails={() => openPlaceDetail(place)}
                                   onNavigate={() => setNavPlace(place)}
-                                  onViewMap={!isDesktop ? (place) => {
-                                    setMapModalPlace(place);
-                                    setShowMapModal(true);
-                                  } : undefined}
                                 />
                               );
-                            })}
-                          </div>
-
-                          <button
-                            onClick={() => setShowAllOnMap(prev => !prev)}
-                            className="bouncy-button"
-                            style={{
-                              border: 'none',
-                              borderRadius: '16px',
-                              padding: '13px',
-                              background: 'white',
-                              color: 'var(--charcoal)',
-                              fontFamily: 'Nunito, sans-serif',
-                              fontSize: '14px',
-                              fontWeight: 900,
-                              cursor: 'pointer',
-                              boxShadow: '0 5px 16px rgba(0,0,0,0.07)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '8px',
                             }}
-                          >
-                            <MapPinned size={17} strokeWidth={3} />
-                            {showAllOnMap ? 'Show only these 3 picks' : 'Explore full map'}
-                          </button>
+                            onToggleMap={() => setShowAllOnMap(prev => !prev)}
+                            mapButtonLabel={{
+                              icon: <MapPinned size={17} strokeWidth={3} />,
+                              text: showAllOnMap ? 'Show only these 3 picks' : 'Explore full map',
+                            }}
+                          />
                         </motion.section>
                       )}
                     </AnimatePresence>
@@ -1137,378 +1069,135 @@ export default function Home() {
 
         <AnimatePresence>
           {showSavedSheet && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => {
-                  setShowSavedSheet(false);
-                  setReturnToSavedAfterDetail(false);
-                }}
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  background: 'rgba(0, 0, 0, 0.38)',
-                  zIndex: 80,
-                  backdropFilter: 'blur(4px)',
-                  WebkitBackdropFilter: 'blur(4px)',
-                }}
-              />
-              <motion.section
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 26 }}
-                style={{
-                  position: 'fixed',
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  zIndex: 90,
-                  background: 'white',
-                  borderTopLeftRadius: '24px',
-                  borderTopRightRadius: '24px',
-                  boxShadow: '0 -16px 48px rgba(34,34,34,0.18)',
-                  height: isDesktop ? 'min(72vh, 720px)' : 'min(72vh, calc(100dvh - 20px))',
-                  maxWidth: isDesktop ? '520px' : 'none',
-                  margin: isDesktop ? '0 auto' : '0',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  overflow: 'hidden',
-                }}
-              >
+            <BottomSheet
+              title="Saved spots"
+              subtitle="Your shortlist for an easier next outing."
+              onClose={() => {
+                setShowSavedSheet(false);
+                setReturnToSavedAfterDetail(false);
+              }}
+              height={isDesktop ? 'min(72vh, 720px)' : 'min(72vh, calc(100dvh - 20px))'}
+              maxWidth={isDesktop ? '520px' : 'none'}
+              bodyStyle={{ display: 'grid', gap: '10px' }}
+            >
+              {favoritePlaces.length === 0 ? (
                 <div style={{
-                  padding: '12px 14px 10px',
-                  borderBottom: '1px solid rgba(0,0,0,0.06)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px',
+                  borderRadius: '18px',
+                  padding: '18px',
+                  background: 'rgba(255,248,231,0.9)',
+                  color: '#666',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  lineHeight: 1.45,
                 }}>
-                  <div>
-                    <div style={{ fontFamily: 'Fredoka, sans-serif', fontSize: '20px', fontWeight: 800, color: 'var(--charcoal)' }}>
-                      Saved spots
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#777', fontWeight: 700 }}>
-                      Your shortlist for an easier next outing.
-                    </div>
-                  </div>
+                  Save a few places first. Then this list becomes your fast lane on busy weekends.
+                </div>
+              ) : (
+                favoritePlaces.map(place => (
                   <button
-                    onClick={() => {
-                      setShowSavedSheet(false);
-                      setReturnToSavedAfterDetail(false);
-                    }}
+                    key={place.id}
+                    onClick={() => openPlaceDetail(place, { fromSaved: true })}
                     className="bouncy-button"
                     style={{
-                      background: 'var(--cream)',
                       border: 'none',
-                      borderRadius: '999px',
-                      width: '34px',
-                      height: '34px',
+                      borderRadius: '18px',
+                      padding: '12px',
+                      background: `linear-gradient(135deg, ${place.color.primary}18, ${place.color.light})`,
+                      color: 'var(--charcoal)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'grid',
+                      gridTemplateColumns: '52px 1fr auto',
+                      gap: '12px',
+                      alignItems: 'center',
+                      boxShadow: '0 6px 20px rgba(34,34,34,0.06)',
+                    }}
+                  >
+                    <div style={{
+                      width: '52px',
+                      height: '52px',
+                      borderRadius: '16px',
+                      background: `linear-gradient(135deg, ${place.color.primary}, ${place.color.dark})`,
+                      color: 'white',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <X size={18} strokeWidth={2.7} color="#999" />
-                  </button>
-                </div>
-
-                <div
-                  className="hide-scrollbar"
-                  style={{
-                    flex: 1,
-                    minHeight: 0,
-                    overflowY: 'auto',
-                    WebkitOverflowScrolling: 'touch',
-                    padding: '12px 14px max(18px, env(safe-area-inset-bottom))',
-                    display: 'grid',
-                    gap: '10px',
-                  }}
-                >
-                  {favoritePlaces.length === 0 ? (
-                    <div style={{
-                      borderRadius: '18px',
-                      padding: '18px',
-                      background: 'rgba(255,248,231,0.9)',
-                      color: '#666',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      lineHeight: 1.45,
+                      fontSize: '24px',
+                      boxShadow: `0 8px 20px ${place.color.primary}44`,
                     }}>
-                      Save a few places first. Then this list becomes your fast lane on busy weekends.
+                      {place.emoji}
                     </div>
-                  ) : (
-                    favoritePlaces.map(place => (
-                      <button
-                        key={place.id}
-                        onClick={() => openPlaceDetail(place, { fromSaved: true })}
-                        className="bouncy-button"
-                        style={{
-                          border: 'none',
-                          borderRadius: '18px',
-                          padding: '12px',
-                          background: `linear-gradient(135deg, ${place.color.primary}18, ${place.color.light})`,
-                          color: 'var(--charcoal)',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          display: 'grid',
-                          gridTemplateColumns: '52px 1fr auto',
-                          gap: '12px',
-                          alignItems: 'center',
-                          boxShadow: '0 6px 20px rgba(34,34,34,0.06)',
-                        }}
-                      >
-                        <div style={{
-                          width: '52px',
-                          height: '52px',
-                          borderRadius: '16px',
-                          background: `linear-gradient(135deg, ${place.color.primary}, ${place.color.dark})`,
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '24px',
-                          boxShadow: `0 8px 20px ${place.color.primary}44`,
-                        }}>
-                          {place.emoji}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontFamily: 'Fredoka, sans-serif', fontSize: '17px', fontWeight: 800, lineHeight: 1.08 }}>
-                            {place.nameEn || place.name}
-                          </div>
-                          <div style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '6px',
-                            color: '#666',
-                            fontSize: '12px',
-                            fontWeight: 800,
-                            marginTop: '6px',
-                          }}>
-                            <span>{place.indoor ? 'Indoor' : 'Outdoor'}</span>
-                            <span>·</span>
-                            <span>Age {place.ageMin}-{place.ageMax}</span>
-                            <span>·</span>
-                            <span>{place.durationHours}h</span>
-                          </div>
-                        </div>
-                        <div style={{ color: '#999', fontSize: '18px', fontWeight: 900 }}>›</div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </motion.section>
-            </>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: 'Fredoka, sans-serif', fontSize: '17px', fontWeight: 800, lineHeight: 1.08 }}>
+                        {place.nameEn || place.name}
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '6px',
+                        color: '#666',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        marginTop: '6px',
+                      }}>
+                        <span>{place.indoor ? 'Indoor' : 'Outdoor'}</span>
+                        <span>·</span>
+                        <span>Age {place.ageMin}-{place.ageMax}</span>
+                        <span>·</span>
+                        <span>{place.durationHours}h</span>
+                      </div>
+                    </div>
+                    <div style={{ color: '#999', fontSize: '18px', fontWeight: 900 }}>›</div>
+                  </button>
+                ))
+              )}
+            </BottomSheet>
           )}
         </AnimatePresence>
 
         <AnimatePresence>
           {showTweaks && !selectedPlace && !isDesktop && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowTweaks(false)}
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  background: 'rgba(0, 0, 0, 0.38)',
-                  zIndex: 80,
-                  backdropFilter: 'blur(4px)',
-                  WebkitBackdropFilter: 'blur(4px)',
+            <BottomSheet
+              title="Adjust your picks"
+              subtitle="Tune the fit, then pick your backup."
+              onClose={() => setShowTweaks(false)}
+              bodyStyle={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
+            >
+              <TweakPanelContent
+                filterGroups={filterGroups}
+                onShuffle={() => setRecommendationOffset(prev => prev + 1)}
+                backupPicks={backupPicks}
+                renderBackupPick={(place, index) => {
+                  const contrastReason = getBackupContrastReason(index);
+                  return (
+                    <PickCard
+                      key={place.id}
+                      place={place}
+                      rank={`${contrastReason.icon} ${contrastReason.text}`}
+                      variant="backup"
+                      area={area}
+                      context={context}
+                      onDetails={() => {
+                        setShowTweaks(false);
+                        openPlaceDetail(place);
+                      }}
+                      onNavigate={() => setNavPlace(place)}
+                    />
+                  );
+                }}
+                onToggleMap={() => {
+                  if (showMapFullscreen || showAllOnMap) {
+                    closeFullMap();
+                    return;
+                  }
+                  openFullMap();
+                }}
+                mapButtonLabel={{
+                  icon: <MapPinned size={17} strokeWidth={3} />,
+                  text: showMapFullscreen || showAllOnMap ? 'Back to picks' : 'Explore full map',
                 }}
               />
-              <motion.section
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{ type: 'spring', damping: 26 }}
-                style={{
-                  position: 'fixed',
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  zIndex: 90,
-                  background: 'white',
-                  borderTopLeftRadius: '24px',
-                  borderTopRightRadius: '24px',
-                  boxShadow: '0 -16px 48px rgba(34,34,34,0.18)',
-                  height: 'min(82vh, calc(100dvh - 20px))',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  overflow: 'hidden',
-                  touchAction: 'pan-y',
-                }}
-              >
-                <div style={{
-                  padding: '12px 14px 10px',
-                  borderBottom: '1px solid rgba(0,0,0,0.06)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                }}>
-                  <div>
-                    <div style={{ fontFamily: 'Fredoka, sans-serif', fontSize: '20px', fontWeight: 800, color: 'var(--charcoal)' }}>
-                      Adjust your picks
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#777', fontWeight: 700 }}>
-                      Tune the fit, then pick your backup.
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowTweaks(false)}
-                    className="bouncy-button"
-                    style={{
-                      background: 'var(--cream)',
-                      border: 'none',
-                      borderRadius: '999px',
-                      width: '34px',
-                      height: '34px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <X size={18} strokeWidth={2.7} color="#999" />
-                  </button>
-                </div>
-
-                <div
-                  className="hide-scrollbar"
-                  style={{
-                    flex: 1,
-                    minHeight: 0,
-                    overflowY: 'auto',
-                    WebkitOverflowScrolling: 'touch',
-                    overscrollBehavior: 'contain',
-                    touchAction: 'pan-y',
-                    padding: '12px 14px max(18px, env(safe-area-inset-bottom))',
-                    display: 'grid',
-                    gap: '10px',
-                  }}
-                >
-                  {[
-                    ['Kid age', AGE_FILTERS, age, setAge],
-                    ['Starting area', AREA_FILTERS, area, setArea],
-                    ['Time today', TIME_FILTERS, time, setTime],
-                    ["Today's energy", ENERGY_FILTERS, energy, setEnergy],
-                  ].map(([label, items, value, setter]) => (
-                    <div key={label} style={{ display: 'grid', gap: '6px' }}>
-                      <div style={{ fontSize: '11px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                        {label}
-                      </div>
-                      <div className="hide-scrollbar" style={{ display: 'flex', gap: '7px', overflowX: 'auto', paddingBottom: '2px' }}>
-                        {items.map(item => {
-                          const active = value === item.id;
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => setter(item.id)}
-                              className="bouncy-button"
-                              style={{
-                                flexShrink: 0,
-                                border: 'none',
-                                borderRadius: '999px',
-                                padding: '9px 12px',
-                                background: active ? 'linear-gradient(135deg, #FF8A65, #FFD54F)' : 'white',
-                                color: active ? 'white' : '#555',
-                                fontFamily: 'Nunito, sans-serif',
-                                fontSize: '12px',
-                                fontWeight: 900,
-                                cursor: 'pointer',
-                                boxShadow: active ? '0 7px 18px rgba(255,138,101,0.26)' : '0 4px 12px rgba(0,0,0,0.05)',
-                              }}
-                            >
-                              {item.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-
-                  <button
-                    onClick={() => setRecommendationOffset(prev => prev + 1)}
-                    className="bouncy-button"
-                    style={{
-                      border: 'none',
-                      borderRadius: '14px',
-                      padding: '12px',
-                      background: 'var(--charcoal)',
-                      color: 'white',
-                      fontFamily: 'Nunito, sans-serif',
-                      fontSize: '13px',
-                      fontWeight: 900,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Change answer again
-                  </button>
-
-                  <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                      Two backup picks
-                    </div>
-                    {backupPicks.map((place, index) => {
-                      const contrastReason = getBackupContrastReason(index);
-                      return (
-                        <PickCard
-                          key={place.id}
-                          place={place}
-                          rank={`${contrastReason.icon} ${contrastReason.text}`}
-                          variant="backup"
-                          area={area}
-                          context={context}
-                          onDetails={() => {
-                            setShowTweaks(false);
-                            openPlaceDetail(place);
-                          }}
-                          onNavigate={() => setNavPlace(place)}
-                        />
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      if (showMapFullscreen || showAllOnMap) {
-                        closeFullMap();
-                        return;
-                      }
-                      openFullMap();
-                    }}
-                    className="bouncy-button"
-                    style={{
-                      border: 'none',
-                      borderRadius: '16px',
-                      padding: '13px',
-                      background: 'white',
-                      color: 'var(--charcoal)',
-                      fontFamily: 'Nunito, sans-serif',
-                      fontSize: '14px',
-                      fontWeight: 900,
-                      cursor: 'pointer',
-                      boxShadow: '0 5px 16px rgba(0,0,0,0.07)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    <MapPinned size={17} strokeWidth={3} />
-                    {showMapFullscreen || showAllOnMap ? 'Back to picks' : 'Explore full map'}
-                  </button>
-                </div>
-              </motion.section>
-            </>
+            </BottomSheet>
           )}
         </AnimatePresence>
 
