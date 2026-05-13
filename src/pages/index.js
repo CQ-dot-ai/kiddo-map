@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Coffee, Heart, MapPinned, Navigation, RefreshCcw } from 'lucide-react';
 import { PLACES } from '../data/places';
+import SiteHead from '../components/SiteHead';
+import SiteFooter from '../components/SiteFooter';
+import { SITE_URL } from '../lib/site';
 
 const KiddoMap = dynamic(() => import('../components/KiddoMap'), { ssr: false });
 const PlaceDetail = dynamic(() => import('../components/PlaceDetail'), { ssr: false });
@@ -579,6 +581,23 @@ export default function Home() {
     ],
     [age, area, time, energy]
   );
+  const homeStructuredData = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Kiddo Map',
+      url: SITE_URL,
+      description: 'Kuala Lumpur family decisions in 3 minutes.',
+      inLanguage: 'en',
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'Kiddo Map',
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon.svg`,
+    },
+  ];
 
   const openPlaceDetail = (place, options = {}) => {
     const { fromSaved = false } = options;
@@ -610,10 +629,12 @@ export default function Home() {
 
   return (
     <>
-      <Head>
-        <title>Kiddo Map · Decide in 3 minutes</title>
-        <meta name="description" content="Pick a kid-friendly Kuala Lumpur place in 3 minutes." />
-      </Head>
+      <SiteHead
+        title="Decide Where to Take Your Kid in Kuala Lumpur in 3 Minutes"
+        description="Kid-friendly places in Kuala Lumpur, with indoor and outdoor picks, age fit, timing, parent effort notes, and practical tips before you go."
+        path="/"
+        structuredData={homeStructuredData}
+      />
 
       <div style={{
         position: 'fixed',
@@ -829,6 +850,8 @@ export default function Home() {
                 </section>
               </>
             )}
+
+            <SiteFooter compact={isMobile} />
           </motion.main>
 
           <aside style={{
