@@ -1,6 +1,7 @@
 import '../../styles/globals.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Head from 'next/head';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App({ Component, pageProps }) {
   return (
@@ -15,6 +16,7 @@ export default function App({ Component, pageProps }) {
         <meta name="apple-mobile-web-app-title" content="Kiddo Map" />
       </Head>
       <Component {...pageProps} />
+      <Analytics />
     </>
   );
 }
