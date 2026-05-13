@@ -1,7 +1,7 @@
 import '../../styles/globals.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Head from 'next/head';
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from '@vercel/analytics/next';
 
 export default function App({ Component, pageProps }) {
   return (
