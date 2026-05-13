@@ -9,6 +9,7 @@ export default function App({ Component, pageProps }) {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="theme-color" content="#FF8A65" />
+        <meta name="google-site-verification" content="0K4J9JkzOUeR7aZ1jRctVZl17liTAImF-ZkNiZSXxHM" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon.svg" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
