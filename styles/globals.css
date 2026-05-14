@@ -1,6 +1,6 @@
 /* Kiddo Map - 童趣糖果色样式系统 */
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&display=swap');
 
 :root {
   /* 童趣糖果色 */
@@ -36,14 +36,15 @@ html, body {
   background: var(--cream);
   color: var(--charcoal);
   overscroll-behavior: none;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #__next {
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* 滚动条美化 */

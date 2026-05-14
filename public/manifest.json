@@ -1,7 +1,7 @@
 {
-  "name": "Kiddo Map · KL Family Fun Map",
+  "name": "Kiddo Map · Easier Family Weekends",
   "short_name": "Kiddo Map",
-  "description": "Pick a kid-friendly KL place in 3 minutes.",
+  "description": "Kiddo Map helps Kuala Lumpur families plan easier, happier weekends.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

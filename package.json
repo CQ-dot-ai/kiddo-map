@@ -1,13 +1,14 @@
 {
   "name": "kiddo-map",
   "version": "1.0.0",
-  "description": "Kiddo Map - 吉隆坡童游地图，3 分钟决定带娃去哪儿",
+  "description": "Kiddo Map - helping Kuala Lumpur families plan easier, happier weekends",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "./node_modules/.bin/vitest run --config vitest.config.js src/lib/recommendation.test.js"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "eslint": "8.57.0",
-    "eslint-config-next": "14.2.5"
+    "eslint-config-next": "14.2.5",
+    "vitest": "^4.1.6"
   }
 }

@@ -33,8 +33,9 @@ export default function SiteFooter({ compact = false }) {
       }}
     >
       <div style={{ fontSize: compact ? '12px' : '13px', lineHeight: 1.5 }}>
-        Kiddo Map is a family decision tool for Kuala Lumpur. We curate kid-friendly places and practical notes to help parents decide faster.
+        Kiddo Map helps Kuala Lumpur families create easier, happier weekends. We curate kid-friendly places and practical notes so parents can spend less time deciding and more time enjoying the day.
       </div>
+
       <div
         style={{
           display: 'grid',

@@ -1,32 +1,6 @@
 import { motion } from 'framer-motion';
 import { X, Heart, Navigation, Clock, Users, DollarSign, MapPin, ExternalLink, Star } from 'lucide-react';
 
-const TICKET_GUIDES = {
-  'aquaria-klcc': {
-    title: 'Buy ticket before you go',
-    option: 'Official site first',
-    note: 'Mobile tickets beat queueing with kids.',
-    url: 'https://aquariaklcc.com',
-  },
-  petrosains: {
-    title: 'Book your slot online',
-    option: 'Official Petrosains tickets',
-    note: 'Weekend sessions fill up.',
-    url: 'https://petrosains.com.my',
-  },
-  kidzania: {
-    title: 'Buy ticket before you go',
-    option: 'Official site or Klook',
-    note: 'Go early — more role-play time.',
-    url: 'https://www.kidzania.com.my',
-  },
-  'sunway-lagoon': {
-    title: 'Buy ticket before you go',
-    option: 'Official site or Klook',
-    note: 'Online tickets save real time.',
-    url: 'https://sunwaylagoon.com',
-  },
-};
 
 function getParentQuote(place) {
   if (place.facilities.aircon >= 4 && place.indoor) return 'Parents like: cool indoors when KL gets hot.';
@@ -45,7 +19,29 @@ function getTicketGuide(place) {
       url: null,
     };
   }
-  return TICKET_GUIDES[place.id] || {
+  if (place.ticketRequired === false && !place.ticketNote && !place.ticketUrl) {
+    return {
+      title: 'Check before you go',
+      option: 'Walk-in usually works',
+      note: 'Some places still change rates or entry rules without much notice.',
+      url: place.officialUrl || null,
+    };
+  }
+  if (place.ticketRequired || place.ticketNote || place.ticketUrl || place.officialUrl) {
+    return {
+      title: place.ticketTitle || 'Buy ticket before you go',
+      option:
+        place.ticketOption ||
+        (place.ticketChannel === 'official'
+          ? 'Official site first'
+          : place.ticketChannel === 'walk-in'
+            ? 'Walk-in available'
+            : 'Check the official site first'),
+      note: place.ticketNote || 'Check the official site before you go.',
+      url: place.ticketUrl || place.officialUrl || null,
+    };
+  }
+  return {
     title: 'Check tickets before you go',
     option: 'Official site first',
     note: 'If official tickets exist, use them before Klook or Traveloka.',
@@ -160,15 +156,29 @@ export default function PlaceDetail({
                   onError={(event) => { event.currentTarget.style.display = 'none'; }}
                 />
               </div>
-              <BeforeItem label={ticket.title} value={ticket.option} note={ticket.note} />
-              <BeforeItem
-                label="Best timing"
-                value={place.indoor ? 'Book earlier, go before lunch' : 'Go morning or late afternoon'}
-                note={place.indoor ? 'Less queueing, less tired kids.' : 'Better weather and fewer meltdowns.'}
-              />
-              {place.packingTips && place.packingTips.length > 0 && (
-                <BeforeItem
-                  label="What to pack"
+<BeforeItem label={ticket.title} value={ticket.option} note={ticket.note} />
+{place.openingHoursNote && (
+<BeforeItem
+label="Opening hours"
+value={place.openingHoursNote}
+note={place.ticketRequired === false ? 'Still worth checking holidays or special closures.' : 'Check the official site on the day you go.'}
+/>
+)}
+<BeforeItem
+label="Best timing"
+value={place.bestTimeNote || (place.indoor ? 'Book earlier, go before lunch' : 'Go morning or late afternoon')}
+note={place.indoor ? 'Less queueing, less tired kids.' : 'Better weather and fewer meltdowns.'}
+/>
+{place.watchOutNote && (
+<BeforeItem
+label="Watch out"
+value={place.watchOutNote}
+note="This is the part that helps you avoid surprises."
+/>
+)}
+{place.packingTips && place.packingTips.length > 0 && (
+<BeforeItem
+label="What to pack"
                   value={place.packingTips[0]}
                   note={place.packingTips.length > 1 ? place.packingTips.slice(1).join(' · ') : ''}
                 />

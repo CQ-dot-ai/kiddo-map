@@ -9,24 +9,28 @@ export default function ContentPage({
   eyebrow,
   structuredData,
   children,
+  maxWidth = '860px',
 }) {
   return (
     <>
       <SiteHead title={title} description={description} path={path} structuredData={structuredData} />
       <div
         style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: 'linear-gradient(180deg, #fffaf2 0%, #ffffff 100%)',
           color: '#2b2b2b',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
         }}
       >
         <main
           style={{
-            maxWidth: '860px',
+            maxWidth,
             margin: '0 auto',
             padding: '32px 20px 48px',
             display: 'grid',
             gap: '20px',
+            minHeight: '100dvh',
           }}
         >
           <Link href="/" style={{ color: '#666', textDecoration: 'none', fontWeight: 700, fontSize: '14px' }}>
