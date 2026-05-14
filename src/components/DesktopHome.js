@@ -74,21 +74,21 @@ export default function DesktopHome({
             boxShadow: '14px 0 36px rgba(34,34,34,0.08)',
           }}
         >
-          <HomeHeader
-            compact={false}
-            favoritesCount={favorites.length}
-            onToggleSavedList={onToggleSavedList}
-            onShowTipJar={onShowTipJar}
-          />
+            <HomeHeader
+              compact={false}
+              favoritesCount={favorites.length}
+              onToggleSavedList={onToggleSavedList}
+              onShowTipJar={() => onShowTipJar('header')}
+            />
 
           {showSavedList && (
-            <SavedListPanel
-              favorites={favorites}
-              places={allPlaces}
-              onClose={onCloseSavedList}
-              onSelectPlace={onSelectPlace}
-            />
-          )}
+              <SavedListPanel
+                favorites={favorites}
+                places={allPlaces}
+                onClose={onCloseSavedList}
+                onSelectPlace={(place) => onSelectPlace(place, 'saved_list')}
+              />
+            )}
 
           <section style={{ marginBottom: '16px' }}>
             <h1 style={{
@@ -105,17 +105,17 @@ export default function DesktopHome({
 
           {mainPick && (
             <section style={{ display: 'grid', gap: '12px' }}>
-              <PickCard
-                place={mainPick}
-                rank="Best pick right now"
-                area={area}
-                context={context}
-                areaLabel={AREA_COORDS[area]?.label || 'Area'}
-                tweaksOpen={showTweaks}
-                onDetails={() => onSelectPlace(mainPick)}
-                onNavigate={() => onNavigate(mainPick)}
-                onChangeAnswer={onToggleTweaks}
-              />
+                <PickCard
+                  place={mainPick}
+                  rank="Best pick right now"
+                  area={area}
+                  context={context}
+                  areaLabel={AREA_COORDS[area]?.label || 'Area'}
+                  tweaksOpen={showTweaks}
+                  onDetails={() => onSelectPlace(mainPick, 'main_pick')}
+                  onNavigate={() => onNavigate(mainPick, 'main_pick')}
+                  onChangeAnswer={onToggleTweaks}
+                />
 
               <AnimatePresence initial={false}>
                 {showTweaks && (
@@ -227,8 +227,8 @@ export default function DesktopHome({
                             area={area}
                             context={context}
                             areaLabel={AREA_COORDS[area]?.label || 'Area'}
-                            onDetails={() => onSelectPlace(place)}
-                            onNavigate={() => onNavigate(place)}
+                            onDetails={() => onSelectPlace(place, 'backup_pick')}
+                            onNavigate={() => onNavigate(place, 'backup_pick')}
                           />
                         );
                       })}
@@ -270,11 +270,11 @@ export default function DesktopHome({
           position: 'relative',
           minWidth: 0,
         }}>
-          <KiddoMap
-            places={mapPlaces}
-            selectedPlace={selectedPlace}
-            onPinClick={onSelectPlace}
-          />
+            <KiddoMap
+              places={mapPlaces}
+              selectedPlace={selectedPlace}
+              onPinClick={(place) => onSelectPlace(place, 'map_pin')}
+            />
           <div style={{
             position: 'absolute',
             top: '18px',
@@ -327,9 +327,9 @@ export default function DesktopHome({
               <PlaceDetail
                 place={selectedPlace}
                 isFavorite={favorites.includes(selectedPlace.id)}
-                onToggleFavorite={() => onToggleFavorite(selectedPlace.id)}
+                onToggleFavorite={() => onToggleFavorite(selectedPlace.id, 'detail')}
                 onClose={() => onSelectPlace(null)}
-                onNavigate={() => onNavigate(selectedPlace)}
+                onNavigate={() => onNavigate(selectedPlace, 'detail')}
                 driveText={driveEstimate(selectedPlace, area).value}
                 variant="sidebar"
               />

@@ -3,6 +3,7 @@ import Head from 'next/head';
 import DesktopHome from '../components/DesktopHome';
 import MobileHome from '../components/MobileHome';
 import { PLACES } from '../data/places';
+import { trackEvent } from '../lib/analytics';
 import {
   getMapPlaces,
   getPicks,
@@ -98,6 +99,83 @@ export default function Home() {
     } catch {}
   }, [favorites]);
 
+  const handleSelectPlace = (place, source = 'unknown') => {
+    setSelectedPlace(place);
+    if (place) {
+      trackEvent('place_detail_open', {
+        place_id: place.id,
+        place_name: place.nameEn || place.name,
+        source,
+        surface: isDesktop ? 'desktop' : 'mobile',
+      });
+    }
+  };
+
+  const handleNavigatePlace = (place, source = 'unknown') => {
+    setNavPlace(place);
+    if (place) {
+      trackEvent('take_me_there_click', {
+        place_id: place.id,
+        place_name: place.nameEn || place.name,
+        source,
+        surface: isDesktop ? 'desktop' : 'mobile',
+      });
+    }
+  };
+
+  const handleToggleFavorite = (placeId, source = 'detail') => {
+    const place = PLACES.find(item => item.id === placeId);
+    const isSaved = favorites.includes(placeId);
+    setFavorites(prev =>
+      prev.includes(placeId) ? prev.filter(id => id !== placeId) : [...prev, placeId]
+    );
+    if (place) {
+      trackEvent('save_click', {
+        action: isSaved ? 'remove' : 'save',
+        place_id: place.id,
+        place_name: place.nameEn || place.name,
+        source,
+        surface: isDesktop ? 'desktop' : 'mobile',
+      });
+    }
+  };
+
+  const handleShowTipJar = (source = 'header') => {
+    setShowTipJar(true);
+    trackEvent('support_click', {
+      source,
+      surface: isDesktop ? 'desktop' : 'mobile',
+    });
+  };
+
+  const handleSetAge = (next) => {
+    if (next !== age) {
+      trackEvent('filter_change', { filter: 'age', value: next, surface: isDesktop ? 'desktop' : 'mobile' });
+    }
+    setAge(next);
+  };
+
+  const handleSetArea = (next) => {
+    if (next !== area) {
+      trackEvent('filter_change', { filter: 'area', value: next, surface: isDesktop ? 'desktop' : 'mobile' });
+    }
+    setArea(next);
+  };
+
+  const handleSetTime = (next) => {
+    if (next !== time) {
+      trackEvent('filter_change', { filter: 'time', value: next, surface: isDesktop ? 'desktop' : 'mobile' });
+    }
+    setTime(next);
+  };
+
+  const handleSetEnergy = (next) => {
+    if (next !== energy) {
+      trackEvent('filter_change', { filter: 'energy', value: next, surface: isDesktop ? 'desktop' : 'mobile' });
+    }
+    setEnergy(next);
+  };
+
   useEffect(() => {
     setRecommendationOffset(0);
   }, [age, area, time, energy]);
@@ -118,12 +196,6 @@ export default function Home() {
   const backupPicks = picks.slice(1, 3);
   const mapPlaces = getMapPlaces(showAllOnMap, rankedPlaces, PLACES, picks);
 
-  const handleToggleFavorite = (placeId) => {
-    setFavorites(prev =>
-      prev.includes(placeId) ? prev.filter(id => id !== placeId) : [...prev, placeId]
-    );
-  };
-
   return (
     <>
       <Head>
@@ -140,23 +212,23 @@ export default function Home() {
           context={context}
           favorites={favorites}
           selectedPlace={selectedPlace}
-          onSelectPlace={setSelectedPlace}
+          onSelectPlace={handleSelectPlace}
           onToggleFavorite={handleToggleFavorite}
-          onNavigate={setNavPlace}
+          onNavigate={handleNavigatePlace}
           navPlace={navPlace}
           onCloseNav={() => setNavPlace(null)}
           showTipJar={showTipJar}
-          onShowTipJar={() => setShowTipJar(true)}
+          onShowTipJar={() => handleShowTipJar('header')}
           onCloseTipJar={() => setShowTipJar(false)}
           showInstallHint={showInstallHint}
           onCloseInstallHint={() => setShowInstallHint(false)}
           showSavedList={showSavedList}
           onToggleSavedList={() => setShowSavedList(prev => !prev)}
           onCloseSavedList={() => setShowSavedList(false)}
-          onSetAge={setAge}
-          onSetArea={setArea}
-          onSetTime={setTime}
-          onSetEnergy={setEnergy}
+          onSetAge={handleSetAge}
+          onSetArea={handleSetArea}
+          onSetTime={handleSetTime}
+          onSetEnergy={handleSetEnergy}
           showTweaks={showTweaks}
           onToggleTweaks={() => setShowTweaks(prev => !prev)}
           showAllOnMap={showAllOnMap}
@@ -176,23 +248,23 @@ export default function Home() {
           context={context}
           favorites={favorites}
           selectedPlace={selectedPlace}
-          onSelectPlace={setSelectedPlace}
+          onSelectPlace={handleSelectPlace}
           onToggleFavorite={handleToggleFavorite}
-          onNavigate={setNavPlace}
+          onNavigate={handleNavigatePlace}
           navPlace={navPlace}
           onCloseNav={() => setNavPlace(null)}
           showTipJar={showTipJar}
-          onShowTipJar={() => setShowTipJar(true)}
+          onShowTipJar={() => handleShowTipJar('header')}
           onCloseTipJar={() => setShowTipJar(false)}
           showInstallHint={showInstallHint}
           onCloseInstallHint={() => setShowInstallHint(false)}
           showSavedList={showSavedList}
           onToggleSavedList={() => setShowSavedList(prev => !prev)}
           onCloseSavedList={() => setShowSavedList(false)}
-          onSetAge={setAge}
-          onSetArea={setArea}
-          onSetTime={setTime}
-          onSetEnergy={setEnergy}
+          onSetAge={handleSetAge}
+          onSetArea={handleSetArea}
+          onSetTime={handleSetTime}
+          onSetEnergy={handleSetEnergy}
           showTweaks={showTweaks}
           onToggleTweaks={() => setShowTweaks(prev => !prev)}
           showAllOnMap={showAllOnMap}

@@ -73,7 +73,7 @@ export default function MobileHome({
         <KiddoMap
           places={mapPlaces}
           selectedPlace={selectedPlace}
-          onPinClick={onSelectPlace}
+          onPinClick={(place) => onSelectPlace(place, 'map_pin')}
         />
       </div>
 
@@ -94,19 +94,19 @@ export default function MobileHome({
           background: 'linear-gradient(180deg, rgba(255,248,231,0.94), rgba(255,255,255,0.92))',
         }}
       >
-        <HomeHeader
-          compact
-          favoritesCount={favorites.length}
-          onToggleSavedList={onToggleSavedList}
-          onShowTipJar={onShowTipJar}
-        />
+          <HomeHeader
+            compact
+            favoritesCount={favorites.length}
+            onToggleSavedList={onToggleSavedList}
+            onShowTipJar={() => onShowTipJar('header')}
+          />
 
         {showSavedList && (
           <SavedListPanel
             favorites={favorites}
             places={allPlaces}
             onClose={onCloseSavedList}
-            onSelectPlace={onSelectPlace}
+            onSelectPlace={(place) => onSelectPlace(place, 'saved_list')}
           />
         )}
 
@@ -132,8 +132,8 @@ export default function MobileHome({
               context={context}
               areaLabel={AREA_COORDS[area]?.label || 'Area'}
               tweaksOpen={showTweaks}
-              onDetails={() => onSelectPlace(mainPick)}
-              onNavigate={() => onNavigate(mainPick)}
+              onDetails={() => onSelectPlace(mainPick, 'main_pick')}
+              onNavigate={() => onNavigate(mainPick, 'main_pick')}
               onChangeAnswer={onToggleTweaks}
               onViewMap={(place) => {
                 setMapModalPlace(place);
@@ -251,8 +251,8 @@ export default function MobileHome({
                           area={area}
                           context={context}
                           areaLabel={AREA_COORDS[area]?.label || 'Area'}
-                          onDetails={() => onSelectPlace(place)}
-                          onNavigate={() => onNavigate(place)}
+                          onDetails={() => onSelectPlace(place, 'backup_pick')}
+                          onNavigate={() => onNavigate(place, 'backup_pick')}
                           onViewMap={(spot) => {
                             setMapModalPlace(spot);
                             setShowMapModal(true);
@@ -296,15 +296,15 @@ export default function MobileHome({
 
       <AnimatePresence>
         {selectedPlace && (
-          <PlaceDetail
-            place={selectedPlace}
-            isFavorite={favorites.includes(selectedPlace.id)}
-            onToggleFavorite={() => onToggleFavorite(selectedPlace.id)}
-            onClose={() => onSelectPlace(null)}
-            onNavigate={() => onNavigate(selectedPlace)}
-            driveText={driveEstimate(selectedPlace, area).value}
-            variant="modal"
-          />
+            <PlaceDetail
+              place={selectedPlace}
+              isFavorite={favorites.includes(selectedPlace.id)}
+              onToggleFavorite={() => onToggleFavorite(selectedPlace.id, 'detail')}
+              onClose={() => onSelectPlace(null)}
+              onNavigate={() => onNavigate(selectedPlace, 'detail')}
+              driveText={driveEstimate(selectedPlace, area).value}
+              variant="modal"
+            />
         )}
       </AnimatePresence>
 
