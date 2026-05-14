@@ -1,0 +1,314 @@
+{
+  "version": "1.0",
+  "intent": "Help KL parents decide where to take their kid in 3 minutes.",
+  "inputs": {
+    "childAge": {
+      "type": "number|null"
+    },
+    "startArea": {
+      "type": "enum",
+      "allowed": ["any", "klcc", "pj", "mont-kiara", "bangsar"]
+    },
+    "availableTime": {
+      "type": "enum",
+      "allowed": ["any", "quick", "easy", "half-day"]
+    },
+    "weatherMode": {
+      "type": "enum",
+      "allowed": ["normal", "rainy", "hot"]
+    },
+    "dayPhase": {
+      "type": "enum",
+      "allowed": ["morning", "afternoon", "evening"]
+    },
+    "isWeekend": {
+      "type": "boolean"
+    },
+    "preference": {
+      "type": "enum",
+      "allowed": ["any", "indoor", "outdoor", "budget"]
+    },
+    "savedPlaceIds": {
+      "type": "string[]"
+    },
+    "visitedPlaceIds": {
+      "type": "string[]"
+    }
+  },
+  "weights": {
+    "ageFit": 25,
+    "weatherFit": 20,
+    "timeFit": 18,
+    "distanceFit": 15,
+    "parentEffortFit": 15,
+    "budgetFit": 15,
+    "facilityFit": 12,
+    "weekendFit": 8,
+    "freshnessFit": 8,
+    "verificationFit": 10,
+    "savedBoost": 5,
+    "repeatVisitPenalty": -6
+  },
+  "rules": {
+    "hardBlocks": [
+      {
+        "id": "not-active",
+        "when": { "field": "status", "notEquals": "active" },
+        "score": -1000
+      },
+      {
+        "id": "unverified-main-pick",
+        "when": { "field": "verificationStatus", "equals": "needs_review" },
+        "score": -100
+      }
+    ],
+    "age": [
+      {
+        "id": "age-inside-range",
+        "when": "childAge >= ageMin && childAge <= ageMax",
+        "score": 25
+      },
+      {
+        "id": "age-near-boundary",
+        "when": "childAge !== null && ((childAge === ageMin - 1) || (childAge === ageMax + 1))",
+        "score": 10
+      },
+      {
+        "id": "age-mismatch",
+        "when": "childAge !== null && (childAge < ageMin - 1 || childAge > ageMax + 1)",
+        "score": -40
+      }
+    ],
+    "weather": [
+      {
+        "id": "rainy-weather-safe",
+        "when": "weatherMode === 'rainy' && weatherSafe === true",
+        "score": 20
+      },
+      {
+        "id": "rainy-outdoor-penalty",
+        "when": "weatherMode === 'rainy' && indoor === false",
+        "score": -25
+      },
+      {
+        "id": "hot-indoor-boost",
+        "when": "weatherMode === 'hot' && (indoor === true || facilities.aircon === true)",
+        "score": 15
+      },
+      {
+        "id": "morning-outdoor-boost",
+        "when": "dayPhase === 'morning' && indoor === false",
+        "score": 10
+      }
+    ],
+    "time": [
+      {
+        "id": "quick-fit",
+        "when": "availableTime === 'quick' && durationMaxHours <= 2",
+        "score": 18
+      },
+      {
+        "id": "easy-fit",
+        "when": "availableTime === 'easy' && durationMaxHours <= 3",
+        "score": 15
+      },
+      {
+        "id": "half-day-fit",
+        "when": "availableTime === 'half-day' && durationMaxHours >= 3",
+        "score": 15
+      },
+      {
+        "id": "too-long-penalty",
+        "when": "availableTime === 'quick' && durationMaxHours > 3",
+        "score": -15
+      }
+    ],
+    "preference": [
+      {
+        "id": "indoor-pref-fit",
+        "when": "preference === 'indoor' && indoor === true",
+        "score": 12
+      },
+      {
+        "id": "outdoor-pref-fit",
+        "when": "preference === 'outdoor' && indoor === false",
+        "score": 12
+      },
+      {
+        "id": "budget-pref-fit",
+        "when": "preference === 'budget' && (budgetLevel === 'free' || budgetLevel === 'low')",
+        "score": 15
+      },
+      {
+        "id": "budget-pref-penalty",
+        "when": "preference === 'budget' && budgetLevel === 'high'",
+        "score": -12
+      }
+    ],
+    "distance": [
+      {
+        "id": "same-area",
+        "when": "startArea !== 'any' && normalizedArea === startArea",
+        "score": 15
+      },
+      {
+        "id": "adjacent-area",
+        "when": "startArea !== 'any' && areaDistanceBand === 'near'",
+        "score": 8
+      },
+      {
+        "id": "far-area-penalty",
+        "when": "startArea !== 'any' && areaDistanceBand === 'far'",
+        "score": -10
+      }
+    ],
+    "parentEffort": [
+      {
+        "id": "low-effort",
+        "when": "parentEffort === 'low'",
+        "score": 15
+      },
+      {
+        "id": "medium-effort",
+        "when": "parentEffort === 'medium'",
+        "score": 8
+      },
+      {
+        "id": "weekend-low-effort-bonus",
+        "when": "isWeekend === true && parentEffort === 'low'",
+        "score": 8
+      }
+    ],
+    "facilities": [
+      {
+        "id": "parking-easy",
+        "when": "facilities.parkingEasy === true",
+        "score": 3
+      },
+      {
+        "id": "toilets",
+        "when": "facilities.toilets === true",
+        "score": 3
+      },
+      {
+        "id": "food",
+        "when": "facilities.foodAvailable === true",
+        "score": 2
+      },
+      {
+        "id": "stroller",
+        "when": "strollerFriendly === true",
+        "score": 2
+      },
+      {
+        "id": "aircon",
+        "when": "facilities.aircon === true",
+        "score": 2
+      }
+    ],
+    "freshness": [
+      {
+        "id": "checked-within-30-days",
+        "when": "daysSinceLastChecked <= 30",
+        "score": 8
+      },
+      {
+        "id": "checked-within-90-days",
+        "when": "daysSinceLastChecked > 30 && daysSinceLastChecked <= 90",
+        "score": 4
+      },
+      {
+        "id": "stale-data-penalty",
+        "when": "daysSinceLastChecked > 90",
+        "score": -10
+      }
+    ],
+    "verification": [
+      {
+        "id": "verified-boost",
+        "when": "verificationStatus === 'verified'",
+        "score": 10
+      },
+      {
+        "id": "community-tip-penalty",
+        "when": "verificationStatus === 'community_tip'",
+        "score": -5
+      }
+    ],
+    "history": [
+      {
+        "id": "saved-boost",
+        "when": "savedPlaceIds.includes(id)",
+        "score": 5
+      },
+      {
+        "id": "visited-penalty",
+        "when": "visitedPlaceIds.includes(id)",
+        "score": -6
+      }
+    ]
+  },
+  "mainPickGate": {
+    "status": "active",
+    "verificationStatus": ["verified"],
+    "minimumConfidenceScore": 75,
+    "requiredFields": [
+      "nameEn",
+      "location.area",
+      "location.address",
+      "location.coordinates.lat",
+      "location.coordinates.lng",
+      "fit.indoor",
+      "fit.weatherSafe",
+      "fit.ageMin",
+      "fit.ageMax",
+      "fit.durationMinHours",
+      "fit.durationMaxHours",
+      "fit.parentEffort",
+      "content.whyKidsLikeIt",
+      "content.whyParentsLikeIt",
+      "content.tinyTip",
+      "lastCheckedAt"
+    ],
+    "oneOfRequired": [
+      ["sources.officialUrl", "location.googleMapsUrl"]
+    ]
+  },
+  "backupPickStrategy": {
+    "count": 2,
+    "diversityAxes": [
+      "parentEffort",
+      "budgetLevel",
+      "indoor"
+    ],
+    "labels": [
+      "Easier on everyone",
+      "Another good fit"
+    ]
+  },
+  "explanationTemplate": {
+    "whyToday": [
+      {
+        "when": "weatherMode === 'rainy' && weatherSafe === true",
+        "text": "Rain-safe pick for today's weather."
+      },
+      {
+        "when": "dayPhase === 'morning' && indoor === false",
+        "text": "Best before the day gets too hot."
+      },
+      {
+        "when": "dayPhase === 'afternoon' && indoor === true",
+        "text": "Good indoor reset for a hot KL afternoon."
+      }
+    ],
+    "kidFit": "Best for ages {ageMin}-{ageMax}.",
+    "timeFit": "{durationMinHours}-{durationMaxHours}h, easy to fit into today's plan.",
+    "parentEffort": {
+      "low": "Low planning load. Toilets, food, and comfort are easier here.",
+      "medium": "Manageable outing, but expect some effort.",
+      "high": "Fun if you are up for more walking, heat, or logistics."
+    },
+    "driveCheck": "~{estimatedDriveMinutes} min from {startAreaLabel}.",
+    "beforeYouGo": "{ticketNote}"
+  }
+}
