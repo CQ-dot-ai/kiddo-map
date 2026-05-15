@@ -33,7 +33,7 @@ export default function SiteFooter({ compact = false }) {
       }}
     >
       <div style={{ fontSize: compact ? '12px' : '13px', lineHeight: 1.5 }}>
-        Kiddo Map helps Kuala Lumpur families create easier, happier weekends. We curate kid-friendly places and practical notes so parents can spend less time deciding and more time enjoying the day.
+        Kiddomap helps Kuala Lumpur families create easier, happier weekends. We curate kid-friendly places and practical notes so parents can spend less time deciding and more time enjoying the day.
       </div>
 
       <div

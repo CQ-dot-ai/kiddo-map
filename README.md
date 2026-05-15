@@ -1,8 +1,8 @@
-# 🗺️ Kiddo Map · KL Family Fun Map
+# 🗺️ Kiddomap · KL Family Fun Map
 
 > Pick a kid-friendly KL place in 3 minutes.
 
-Kiddo Map is a playful map for parents in Kuala Lumpur. It helps families quickly choose indoor, outdoor, and saved places for kids.
+Kiddomap is a playful map for parents in Kuala Lumpur. It helps families quickly choose indoor, outdoor, and saved places for kids.
 
 ## ✨ Features
 

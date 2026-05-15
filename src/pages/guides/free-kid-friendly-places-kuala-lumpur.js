@@ -23,7 +23,7 @@ const faq = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'What does free mean on Kiddo Map?',
+      name: 'What does free mean on Kiddomap?',
       acceptedAnswer: {
         '@type': 'Answer',
         text: 'It means the place does not require a clear admission fee for the core visit, although parking, food, or optional extras may still cost money.',

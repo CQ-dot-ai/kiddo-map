@@ -199,7 +199,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Kiddo Map · Decide in 3 minutes</title>
+        <title>Kiddomap · Decide in 3 minutes</title>
         <meta name="description" content="Pick a kid-friendly Kuala Lumpur place in 3 minutes." />
       </Head>
 

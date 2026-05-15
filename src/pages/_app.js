@@ -10,11 +10,13 @@ export default function App({ Component, pageProps }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="theme-color" content="#FF8A65" />
         <meta name="google-site-verification" content="0K4J9JkzOUeR7aZ1jRctVZl17liTAImF-ZkNiZSXxHM" />
+        <link rel="icon" href="/logo.png" type="image/png" />
+        <link rel="shortcut icon" href="/logo.png" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icon.svg" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Kiddo Map" />
+        <meta name="apple-mobile-web-app-title" content="Kiddomap" />
       </Head>
       <Component {...pageProps} />
       <Analytics />

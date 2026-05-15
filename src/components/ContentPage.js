@@ -34,7 +34,7 @@ export default function ContentPage({
           }}
         >
           <Link href="/" style={{ color: '#666', textDecoration: 'none', fontWeight: 700, fontSize: '14px' }}>
-            ← Back to Kiddo Map
+            ← Back to Kiddomap
           </Link>
           {eyebrow ? (
             <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#ff8a65' }}>

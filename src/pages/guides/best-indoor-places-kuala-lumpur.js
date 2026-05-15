@@ -23,7 +23,7 @@ const faq = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'What counts as an indoor place on Kiddo Map?',
+      name: 'What counts as an indoor place on Kiddomap?',
       acceptedAnswer: {
         '@type': 'Answer',
         text: 'We treat a place as indoor if it is primarily sheltered, weather-safe, or practical for a rainy or hot Kuala Lumpur day.',

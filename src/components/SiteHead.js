@@ -5,7 +5,7 @@ export default function SiteHead({
   title,
   description = SITE_DESCRIPTION,
   path = '/',
-  image = '/icon.svg',
+  image = '/logo.png',
   type = 'website',
   structuredData = [],
 }) {

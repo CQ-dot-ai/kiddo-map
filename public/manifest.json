@@ -1,7 +1,7 @@
 {
-  "name": "Kiddo Map · Easier Family Weekends",
-  "short_name": "Kiddo Map",
-  "description": "Kiddo Map helps Kuala Lumpur families plan easier, happier weekends.",
+  "name": "Kiddomap · Easier Family Weekends",
+  "short_name": "Kiddomap",
+  "description": "Kiddomap helps Kuala Lumpur families plan easier, happier weekends.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -9,9 +9,15 @@
   "theme_color": "#FF8A65",
   "icons": [
     {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

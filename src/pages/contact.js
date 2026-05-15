@@ -4,19 +4,19 @@ import { CONTACT_EMAIL, SITE_URL, WHATSAPP_NUMBER, whatsappUrl } from '../lib/si
 
 export default function ContactPage() {
  const hasWhatsapp = Boolean(WHATSAPP_NUMBER);
- const whatsappHref = hasWhatsapp ? whatsappUrl('Hi Johnny, I found Kiddo Map and want to reach out.') : '';
+ const whatsappHref = hasWhatsapp ? whatsappUrl('Hi Johnny, I found Kiddomap and want to reach out.') : '';
  const displayWhatsapp = WHATSAPP_NUMBER ? `+${String(WHATSAPP_NUMBER).replace(/[^\d]/g, '')}` : '';
 
  return (
   <ContentPage
    title="Contact"
-   description="Reach out about Kiddo Map, suggest places, or share family feedback."
+   description="Reach out about Kiddomap, suggest places, or share family feedback."
    path="/contact"
    eyebrow="Contact"
    structuredData={{
     '@context': 'https://schema.org',
     '@type': 'ContactPage',
-    name: 'Kiddo Map Contact',
+    name: 'Kiddomap Contact',
     url: `${SITE_URL}/contact`,
    }}
   >

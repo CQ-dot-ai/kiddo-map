@@ -1,5 +1,5 @@
 import { Coffee } from 'lucide-react';
-import { SITE_TAGLINE } from '../../lib/site';
+import { SITE_NAME, SITE_TAGLINE } from '../../lib/site';
 
 export default function HomeHeader({
   favoritesCount = 0,
@@ -20,18 +20,27 @@ export default function HomeHeader({
           width: compact ? '40px' : '44px',
           height: compact ? '40px' : '44px',
           borderRadius: '15px',
-          background: 'linear-gradient(135deg, #FF8A65 0%, #FFD54F 100%)',
+          background: 'white',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: compact ? '22px' : '24px',
           boxShadow: '0 6px 16px rgba(255, 138, 101, 0.3)',
+          overflow: 'hidden',
         }}>
-          🗺️
+          <img
+            src="/logo.png"
+            alt={SITE_NAME}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
         </div>
         <div>
           <div style={{ fontFamily: 'Fredoka, sans-serif', fontSize: compact ? '16px' : '18px', fontWeight: 800 }}>
-            Kiddo Map
+            {SITE_NAME}
           </div>
           <div style={{ fontSize: compact ? '10px' : '11px', color: '#999', fontWeight: 800 }}>
             {SITE_TAGLINE}

@@ -1,7 +1,7 @@
 {
   "name": "kiddo-map",
   "version": "1.0.0",
-  "description": "Kiddo Map - helping Kuala Lumpur families plan easier, happier weekends",
+  "description": "Kiddomap - helping Kuala Lumpur families plan easier, happier weekends",
   "private": true,
   "scripts": {
     "dev": "next dev",

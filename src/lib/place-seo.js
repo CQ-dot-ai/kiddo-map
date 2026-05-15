@@ -98,13 +98,6 @@ export function placeStructuredData(place) {
       latitude: place.coordinates[1],
       longitude: place.coordinates[0],
     },
-    aggregateRating: place.googleRating
-      ? {
-          '@type': 'AggregateRating',
-          ratingValue: place.googleRating,
-          reviewCount: place.googleReviewCount,
-        }
-      : undefined,
     isAccessibleForFree: place.cost === 0,
     audience: {
       '@type': 'PeopleAudience',

@@ -58,10 +58,11 @@ export default function MobileHome({
 
   return (
     <div style={{
-      minHeight: '100dvh',
+      height: '100dvh',
       background: 'var(--cream)',
       position: 'relative',
       overflowX: 'hidden',
+      overflowY: 'hidden',
     }}>
       <div style={{
         position: 'fixed',
@@ -87,7 +88,7 @@ export default function MobileHome({
           padding: '14px',
           paddingTop: 'max(14px, env(safe-area-inset-top))',
           paddingBottom: 'max(14px, env(safe-area-inset-bottom))',
-          minHeight: '100dvh',
+          height: '100dvh',
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
