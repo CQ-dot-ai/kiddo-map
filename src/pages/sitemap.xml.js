@@ -1,4 +1,4 @@
-import { getAllPlaceIds } from '../lib/place-seo';
+import { getCoreSeoPlaceIds } from '../lib/place-seo';
 import { SITE_URL } from '../lib/site';
 
 const staticRoutes = [
@@ -13,10 +13,9 @@ const staticRoutes = [
 ];
 
 export async function getServerSideProps({ res }) {
-  const lastmod = new Date().toISOString();
   const urls = [
     ...staticRoutes,
-    ...getAllPlaceIds().map(id => `/places/${id}`),
+    ...getCoreSeoPlaceIds().map(id => `/places/${id}`),
   ];
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
@@ -25,9 +24,8 @@ ${urls
   .map(
     url => `<url>
   <loc>${SITE_URL}${url}</loc>
-  <lastmod>${lastmod}</lastmod>
   <changefreq>${url.startsWith('/places/') ? 'weekly' : 'monthly'}</changefreq>
-  <priority>${url === '/' ? '1.0' : '0.7'}</priority>
+  <priority>${url === '/' ? '1.0' : url.startsWith('/guides/') ? '0.9' : url.startsWith('/places/') ? '0.8' : '0.6'}</priority>
 </url>`
   )
   .join('\n')}

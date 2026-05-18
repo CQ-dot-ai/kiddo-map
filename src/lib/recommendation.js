@@ -1,4 +1,5 @@
 import { PLACES } from '../data/places';
+import { getCopy } from './copy';
 
 const AREA_COORDS = {
   klcc: { label: 'KLCC', coordinates: [101.7139, 3.1579] },
@@ -37,7 +38,8 @@ function timeMatches(place, time) {
   return true;
 }
 
-function parentEnergy(place) {
+function parentEnergy(place, language = 'en') {
+  const t = getCopy(language).recommendation;
   const ease =
     place.facilities.stroller +
     place.facilities.diaper +
@@ -46,34 +48,36 @@ function parentEnergy(place) {
     place.facilities.aircon;
 
   if (place.indoor && ease >= 22) return {
-    label: 'Easy mode',
-    detail: 'A/C, toilets, food nearby. Parents can breathe.',
+    label: t.easyMode,
+    detail: t.easyModeDetail,
   };
   if (place.indoor) return {
-    label: 'Medium easy',
-    detail: 'Mostly sheltered, but expect some moving around.',
+    label: t.mediumEasy,
+    detail: t.mediumEasyDetail,
   };
   if (maxDurationHours(place.durationHours) <= 2) return {
-    label: 'Light adventure',
-    detail: 'Outdoor fun without turning the whole day into a mission.',
+    label: t.lightAdventure,
+    detail: t.lightAdventureDetail,
   };
   return {
-    label: 'High energy',
-    detail: 'Kids may love it, but parents should expect heat and walking.',
+    label: t.highEnergy,
+    detail: t.highEnergyDetail,
   };
 }
 
-function frictionNote(place) {
-  if (place.indoor && place.cost > 70) return 'Book ahead if it is a busy weekend.';
-  if (place.indoor) return 'Low weather risk, easy to start without overthinking.';
-  if (place.cost === 0) return 'Free entry. Best before it gets too hot.';
-  return 'Check the sky first, then go before peak afternoon heat.';
+function frictionNote(place, language = 'en') {
+  const t = getCopy(language).recommendation;
+  if (place.indoor && place.cost > 70) return t.frictionIndoorPaid;
+  if (place.indoor) return t.frictionIndoor;
+  if (place.cost === 0) return t.frictionFree;
+  return t.frictionOutdoor;
 }
 
-function weatherNote(place) {
+function weatherNote(place, language = 'en') {
+  const t = getCopy(language).recommendation;
   return place.weatherSafe
-    ? 'Rain-safe indoor pick'
-    : 'Best when the sky looks friendly';
+    ? t.rainSafeIndoorPick
+    : t.weatherFriendly;
 }
 
 function distanceKm(from, to) {
@@ -89,69 +93,73 @@ function distanceKm(from, to) {
   return 2 * earthKm * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function driveEstimate(place, area) {
+function driveEstimate(place, area, language = 'en') {
+  const t = getCopy(language).recommendation;
   if (!AREA_COORDS[area]) {
     return {
-      label: 'Drive',
-      value: 'Pick your start area',
-      detail: 'Add an area to see a rough drive time.',
+      label: t.drive,
+      value: t.driveUnknown,
+      detail: t.driveUnknownDetail,
     };
   }
 
   const km = distanceKm(AREA_COORDS[area].coordinates, place.coordinates);
   const minutes = Math.max(8, Math.round((km / 24) * 60 + 8));
   return {
-    label: 'Drive',
-    value: `~${minutes} min from ${AREA_COORDS[area].label}`,
-    detail: `Rough estimate based on distance, not live traffic.`,
+    label: t.drive,
+    value: t.driveValue(minutes, AREA_COORDS[area].label),
+    detail: t.driveDetail,
   };
 }
 
-function todayReasons(place, area, context) {
-  const energy = parentEnergy(place);
-  const drive = driveEstimate(place, area);
+function todayReasons(place, area, context, language = 'en') {
+  const t = getCopy(language).recommendation;
+  const copy = getCopy(language);
+  const energy = parentEnergy(place, language);
+  const drive = driveEstimate(place, area, language);
   const weather =
     place.weatherSafe
       ? context.isAfternoon
-        ? 'A/C cover if KL turns hot or rainy.'
-        : 'Rain-safe, no sky-check needed.'
+        ? t.whyTodayIndoorAfternoon
+        : t.whyTodayRainSafe
       : context.isMorning
-        ? 'Better before the day gets hot.'
-        : 'Go only if the sky still looks friendly.';
+        ? t.whyTodayOutdoorMorning
+        : t.whyTodayWeatherFriendly;
   const time =
     maxDurationHours(place.durationHours) <= 2
-      ? `${place.durationHours}h, easy to fit between meals.`
-      : `${place.durationHours}h, more like a half-day plan.`;
+      ? t.quickTime(t.durationHours(place.durationHours))
+      : t.halfDayTime(t.durationHours(place.durationHours));
   const parent =
     context.isWeekend
-      ? `${energy.label}: weekend-friendly, lower planning load.`
+      ? t.weekendParent(energy.label)
       : `${energy.label}: ${energy.detail}`;
 
   return [
-    ['☔', 'Why today', weather],
-    ['👶', 'Kid fit', `Best for age ${place.ageMin}-${place.ageMax}.`],
-    ['⏱️', 'Time', time],
-    ['☕', 'Parent energy', parent],
+    ['☔', copy.card.whyToday, weather],
+    ['👶', copy.card.kidFit, t.kidFit(place.ageMin, place.ageMax)],
+    ['⏱️', copy.card.time, time],
+    ['☕', copy.card.parentEnergy, parent],
     ['🚗', drive.label, drive.value],
   ];
 }
 
-function getBackupContrastReason(mainPick, backup) {
+function getBackupContrastReason(mainPick, backup, language = 'en') {
+  const t = getCopy(language).recommendation;
   if (backup.cost === 0 && mainPick.cost > 0)
-    return { icon: '🆓', text: 'Free entry', label: 'No ticket needed' };
+    return { icon: '🆓', text: t.contrastFree, label: t.contrastFree };
   if (backup.cost < mainPick.cost && mainPick.cost - backup.cost >= 20)
-    return { icon: '💰', text: 'Budget pick', label: 'Easier on the wallet' };
+    return { icon: '💰', text: t.contrastBudget, label: t.contrastBudget };
   if (backup.indoor && !mainPick.indoor)
-    return { icon: '☔', text: 'Rain-safe', label: 'Covered whatever the weather' };
+    return { icon: '☔', text: t.contrastRainSafe, label: t.contrastRainSafe };
   if (!backup.indoor && mainPick.indoor)
-    return { icon: '🌿', text: 'Outdoor pick', label: 'Fresh air and open space' };
-  if (parentEnergy(backup).label === 'Easy mode' && parentEnergy(mainPick).label !== 'Easy mode')
-    return { icon: '😌', text: 'Less effort', label: 'Easier on everyone' };
+    return { icon: '🌿', text: t.contrastOutdoor, label: t.contrastOutdoor };
+  if (parentEnergy(backup, language).label === t.easyMode && parentEnergy(mainPick, language).label !== t.easyMode)
+    return { icon: '😌', text: t.contrastEasy, label: t.contrastEasy };
   if (maxDurationHours(backup.durationHours) < maxDurationHours(mainPick.durationHours))
-    return { icon: '⚡', text: 'Quicker trip', label: 'Fits a shorter window' };
+    return { icon: '⚡', text: t.contrastQuick, label: t.contrastQuick };
   if (maxDurationHours(backup.durationHours) > maxDurationHours(mainPick.durationHours))
-    return { icon: '🕐', text: 'Stay longer', label: 'More to explore' };
-  return { icon: '📍', text: 'Another pick', label: 'Different vibe' };
+    return { icon: '🕐', text: t.contrastLonger, label: t.contrastLonger };
+  return { icon: '📍', text: t.contrastAnother, label: t.contrastAnother };
 }
 
 function decisionScore(place, age, area, time, energy, favorites, context) {
@@ -243,4 +251,3 @@ export function getPicks(rankedPlaces, recommendationOffset = 0, limit = 3) {
 export function getMapPlaces(showAllOnMap, filteredPlaces, places, picks) {
   return showAllOnMap ? (filteredPlaces.length ? filteredPlaces : places) : picks;
 }
-

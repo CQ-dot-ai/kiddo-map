@@ -3,6 +3,7 @@ export default function SavedListPanel({
   places = [],
   onClose,
   onSelectPlace,
+  copy,
 }) {
   return (
     <div style={{
@@ -26,7 +27,7 @@ export default function SavedListPanel({
           color: '#999',
           textTransform: 'uppercase',
         }}>
-          Saved spots {favorites.length > 0 ? `(${favorites.length})` : ''}
+          {copy.saved.title} {favorites.length > 0 ? `(${favorites.length})` : ''}
         </div>
         <button
           onClick={onClose}
@@ -40,12 +41,12 @@ export default function SavedListPanel({
             cursor: 'pointer',
           }}
         >
-          Close
+          {copy.saved.close}
         </button>
       </div>
       {favorites.length === 0 ? (
         <div style={{ fontSize: '13px', color: '#777', fontWeight: 700, lineHeight: 1.5 }}>
-          Tap the heart inside any place card to save it here.
+          {copy.saved.empty}
         </div>
       ) : (
         <div style={{

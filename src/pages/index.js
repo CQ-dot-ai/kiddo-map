@@ -4,6 +4,8 @@ import DesktopHome from '../components/DesktopHome';
 import MobileHome from '../components/MobileHome';
 import { PLACES } from '../data/places';
 import { trackEvent } from '../lib/analytics';
+import { DEFAULT_LANGUAGE, getCopy } from '../lib/copy';
+import { getSurface } from '../lib/surface';
 import {
   getMapPlaces,
   getPicks,
@@ -11,43 +13,14 @@ import {
   getTodayContext,
 } from '../lib/recommendation';
 
-const AGE_FILTERS = [
-  { id: 'any', label: 'Any age' },
-  { id: 'baby', label: '0-3' },
-  { id: 'little', label: '4-7' },
-  { id: 'big', label: '8+' },
-];
-
-const AREA_FILTERS = [
-  { id: 'any', label: 'Anywhere' },
-  { id: 'klcc', label: 'KLCC' },
-  { id: 'pj', label: 'PJ' },
-  { id: 'mont-kiara', label: 'Mont Kiara' },
-  { id: 'bangsar', label: 'Bangsar' },
-];
-
-const TIME_FILTERS = [
-  { id: 'any', label: 'Any time' },
-  { id: 'quick', label: '1-2h' },
-  { id: 'easy', label: '2-3h' },
-  { id: 'half-day', label: 'Half day' },
-];
-
-const ENERGY_FILTERS = [
-  { id: 'any', label: 'Best answer' },
-  { id: 'indoor', label: 'Rain-safe' },
-  { id: 'outdoor', label: 'Outdoor' },
-  { id: 'budget', label: 'Budget' },
-];
-
 export default function Home() {
   const [age, setAge] = useState('any');
   const [area, setArea] = useState('any');
   const [time, setTime] = useState('any');
   const [energy, setEnergy] = useState('any');
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [navPlace, setNavPlace] = useState(null);
-  const [showTipJar, setShowTipJar] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [showSavedList, setShowSavedList] = useState(false);
   const [showInstallHint, setShowInstallHint] = useState(false);
@@ -57,6 +30,9 @@ export default function Home() {
   const [context, setContext] = useState({ isMorning: true, isAfternoon: false, isWeekend: false, hour: 9 });
   const [isDesktop, setIsDesktop] = useState(false);
   const favoritesLoaded = useRef(false);
+  const languageLoaded = useRef(false);
+  const copy = useMemo(() => getCopy(language), [language]);
+  const surface = getSurface(isDesktop);
 
   useEffect(() => {
     setContext(getTodayContext());
@@ -77,6 +53,17 @@ export default function Home() {
       }
     }
     favoritesLoaded.current = true;
+
+    let savedLanguage = null;
+    try {
+      savedLanguage = localStorage.getItem('kiddo-language');
+    } catch {
+      savedLanguage = null;
+    }
+    if (savedLanguage) {
+      setLanguage(savedLanguage);
+    }
+    languageLoaded.current = true;
 
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
@@ -99,6 +86,13 @@ export default function Home() {
     } catch {}
   }, [favorites]);
 
+  useEffect(() => {
+    if (!languageLoaded.current) return;
+    try {
+      localStorage.setItem('kiddo-language', language);
+    } catch {}
+  }, [language]);
+
   const handleSelectPlace = (place, source = 'unknown') => {
     setSelectedPlace(place);
     if (place) {
@@ -106,7 +100,7 @@ export default function Home() {
         place_id: place.id,
         place_name: place.nameEn || place.name,
         source,
-        surface: isDesktop ? 'desktop' : 'mobile',
+        surface,
       });
     }
   };
@@ -118,7 +112,7 @@ export default function Home() {
         place_id: place.id,
         place_name: place.nameEn || place.name,
         source,
-        surface: isDesktop ? 'desktop' : 'mobile',
+        surface,
       });
     }
   };
@@ -135,43 +129,35 @@ export default function Home() {
         place_id: place.id,
         place_name: place.nameEn || place.name,
         source,
-        surface: isDesktop ? 'desktop' : 'mobile',
+        surface,
       });
     }
   };
 
-  const handleShowTipJar = (source = 'header') => {
-    setShowTipJar(true);
-    trackEvent('support_click', {
-      source,
-      surface: isDesktop ? 'desktop' : 'mobile',
-    });
-  };
-
   const handleSetAge = (next) => {
     if (next !== age) {
-      trackEvent('filter_change', { filter: 'age', value: next, surface: isDesktop ? 'desktop' : 'mobile' });
+      trackEvent('filter_change', { filter: 'age', value: next, surface });
     }
     setAge(next);
   };
 
   const handleSetArea = (next) => {
     if (next !== area) {
-      trackEvent('filter_change', { filter: 'area', value: next, surface: isDesktop ? 'desktop' : 'mobile' });
+      trackEvent('filter_change', { filter: 'area', value: next, surface });
     }
     setArea(next);
   };
 
   const handleSetTime = (next) => {
     if (next !== time) {
-      trackEvent('filter_change', { filter: 'time', value: next, surface: isDesktop ? 'desktop' : 'mobile' });
+      trackEvent('filter_change', { filter: 'time', value: next, surface });
     }
     setTime(next);
   };
 
   const handleSetEnergy = (next) => {
     if (next !== energy) {
-      trackEvent('filter_change', { filter: 'energy', value: next, surface: isDesktop ? 'desktop' : 'mobile' });
+      trackEvent('filter_change', { filter: 'energy', value: next, surface });
     }
     setEnergy(next);
   };
@@ -199,8 +185,8 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Kiddomap · Decide in 3 minutes</title>
-        <meta name="description" content="Pick a kid-friendly Kuala Lumpur place in 3 minutes." />
+        <title>{copy.pageTitle}</title>
+        <meta name="description" content={copy.pageDescription} />
       </Head>
 
       {isDesktop ? (
@@ -217,9 +203,6 @@ export default function Home() {
           onNavigate={handleNavigatePlace}
           navPlace={navPlace}
           onCloseNav={() => setNavPlace(null)}
-          showTipJar={showTipJar}
-          onShowTipJar={() => handleShowTipJar('header')}
-          onCloseTipJar={() => setShowTipJar(false)}
           showInstallHint={showInstallHint}
           onCloseInstallHint={() => setShowInstallHint(false)}
           showSavedList={showSavedList}
@@ -238,6 +221,9 @@ export default function Home() {
           backupPicks={backupPicks}
           mapPlaces={mapPlaces}
           allPlaces={PLACES}
+          language={language}
+          copy={copy}
+          onChangeLanguage={setLanguage}
         />
       ) : (
         <MobileHome
@@ -253,9 +239,6 @@ export default function Home() {
           onNavigate={handleNavigatePlace}
           navPlace={navPlace}
           onCloseNav={() => setNavPlace(null)}
-          showTipJar={showTipJar}
-          onShowTipJar={() => handleShowTipJar('header')}
-          onCloseTipJar={() => setShowTipJar(false)}
           showInstallHint={showInstallHint}
           onCloseInstallHint={() => setShowInstallHint(false)}
           showSavedList={showSavedList}
@@ -274,6 +257,9 @@ export default function Home() {
           backupPicks={backupPicks}
           mapPlaces={mapPlaces}
           allPlaces={PLACES}
+          language={language}
+          copy={copy}
+          onChangeLanguage={setLanguage}
         />
       )}
     </>

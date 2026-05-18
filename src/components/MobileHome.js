@@ -8,7 +8,6 @@ import PickCard from './PickCard';
 import HomeHeader from './home/HomeHeader';
 import SavedListPanel from './home/SavedListPanel';
 import NavigationSheet from './NavigationSheet';
-import TipJarSheet from './TipJarSheet';
 import { AREA_COORDS, getBackupContrastReason, driveEstimate } from '../lib/recommendation';
 
 export default function MobileHome({
@@ -24,9 +23,6 @@ export default function MobileHome({
   onNavigate,
   navPlace,
   onCloseNav,
-  showTipJar,
-  onShowTipJar,
-  onCloseTipJar,
   showInstallHint,
   onCloseInstallHint,
   showSavedList,
@@ -46,15 +42,27 @@ export default function MobileHome({
   backupPicks,
   mapPlaces,
   allPlaces,
+  language,
+  copy,
+  onChangeLanguage,
 }) {
   const [showMapModal, setShowMapModal] = useState(false);
   const [mapModalPlace, setMapModalPlace] = useState(null);
+  const isSinglePlaceMap = Boolean(mapModalPlace);
 
   useEffect(() => {
     if (!showMapModal) {
       setMapModalPlace(null);
     }
   }, [showMapModal]);
+
+  const openFullMap = () => {
+    if (!showAllOnMap) {
+      onToggleAllOnMap();
+    }
+    setMapModalPlace(null);
+    setShowMapModal(true);
+  };
 
   return (
     <div style={{
@@ -99,13 +107,16 @@ export default function MobileHome({
             compact
             favoritesCount={favorites.length}
             onToggleSavedList={onToggleSavedList}
-            onShowTipJar={() => onShowTipJar('header')}
+            language={language}
+            copy={copy}
+            onChangeLanguage={onChangeLanguage}
           />
 
         {showSavedList && (
           <SavedListPanel
             favorites={favorites}
             places={allPlaces}
+            copy={copy}
             onClose={onCloseSavedList}
             onSelectPlace={(place) => onSelectPlace(place, 'saved_list')}
           />
@@ -120,7 +131,7 @@ export default function MobileHome({
             color: 'var(--charcoal)',
             letterSpacing: 0,
           }}>
-            Decide where to take your kid in 3 minutes.
+            {copy.headline}
           </h1>
         </section>
 
@@ -128,7 +139,7 @@ export default function MobileHome({
           <section style={{ display: 'grid', gap: '12px' }}>
             <PickCard
               place={mainPick}
-              rank="Best pick right now"
+              rank={copy.card.bestPick}
               area={area}
               context={context}
               areaLabel={AREA_COORDS[area]?.label || 'Area'}
@@ -140,7 +151,33 @@ export default function MobileHome({
                 setMapModalPlace(place);
                 setShowMapModal(true);
               }}
+              copy={copy}
+              language={language}
             />
+
+            <button
+              onClick={openFullMap}
+              className="bouncy-button"
+              style={{
+                border: 'none',
+                borderRadius: '16px',
+                padding: '13px 14px',
+                background: 'white',
+                color: 'var(--charcoal)',
+                fontFamily: 'Nunito, sans-serif',
+                fontSize: '14px',
+                fontWeight: 900,
+                cursor: 'pointer',
+                boxShadow: '0 5px 16px rgba(0,0,0,0.07)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <MapPinned size={17} strokeWidth={3} />
+              {copy.card.exploreFullMap}
+            </button>
 
             <AnimatePresence initial={false}>
               {showTweaks && (
@@ -160,30 +197,30 @@ export default function MobileHome({
                   }}
                 >
                   {[
-                    ['Kid age', [
-                      { id: 'any', label: 'Any age' },
-                      { id: 'baby', label: '0-3' },
-                      { id: 'little', label: '4-7' },
-                      { id: 'big', label: '8+' },
+                    [copy.filters.age, [
+                      { id: 'any', label: copy.filters.ageOptions.any },
+                      { id: 'baby', label: copy.filters.ageOptions.baby },
+                      { id: 'little', label: copy.filters.ageOptions.little },
+                      { id: 'big', label: copy.filters.ageOptions.big },
                     ], age, onSetAge],
-                    ['Starting area', [
-                      { id: 'any', label: 'Anywhere' },
-                      { id: 'klcc', label: 'KLCC' },
-                      { id: 'pj', label: 'PJ' },
-                      { id: 'mont-kiara', label: 'Mont Kiara' },
-                      { id: 'bangsar', label: 'Bangsar' },
+                    [copy.filters.area, [
+                      { id: 'any', label: copy.filters.areaOptions.any },
+                      { id: 'klcc', label: copy.filters.areaOptions.klcc },
+                      { id: 'pj', label: copy.filters.areaOptions.pj },
+                      { id: 'mont-kiara', label: copy.filters.areaOptions['mont-kiara'] },
+                      { id: 'bangsar', label: copy.filters.areaOptions.bangsar },
                     ], area, onSetArea],
-                    ['Time today', [
-                      { id: 'any', label: 'Any time' },
-                      { id: 'quick', label: '1-2h' },
-                      { id: 'easy', label: '2-3h' },
-                      { id: 'half-day', label: 'Half day' },
+                    [copy.filters.time, [
+                      { id: 'any', label: copy.filters.timeOptions.any },
+                      { id: 'quick', label: copy.filters.timeOptions.quick },
+                      { id: 'easy', label: copy.filters.timeOptions.easy },
+                      { id: 'half-day', label: copy.filters.timeOptions['half-day'] },
                     ], time, onSetTime],
-                    ["Today's energy", [
-                      { id: 'any', label: 'Best answer' },
-                      { id: 'indoor', label: 'Rain-safe' },
-                      { id: 'outdoor', label: 'Outdoor' },
-                      { id: 'budget', label: 'Budget' },
+                    [copy.filters.energy, [
+                      { id: 'any', label: copy.filters.energyOptions.any },
+                      { id: 'indoor', label: copy.filters.energyOptions.indoor },
+                      { id: 'outdoor', label: copy.filters.energyOptions.outdoor },
+                      { id: 'budget', label: copy.filters.energyOptions.budget },
                     ], energy, onSetEnergy],
                   ].map(([label, items, value, setter]) => (
                     <div key={label} style={{ display: 'grid', gap: '6px' }}>
@@ -234,15 +271,15 @@ export default function MobileHome({
                       cursor: 'pointer',
                     }}
                   >
-                    Show me another good spot
+                    {copy.card.showAnother}
                   </button>
 
                   <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
                     <div style={{ fontSize: '12px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                      Two backup picks
+                      {copy.card.backupPicks}
                     </div>
                     {backupPicks.map((place) => {
-                      const contrastReason = getBackupContrastReason(mainPick, place);
+                      const contrastReason = getBackupContrastReason(mainPick, place, language);
                       return (
                         <PickCard
                           key={place.id}
@@ -258,6 +295,8 @@ export default function MobileHome({
                             setMapModalPlace(spot);
                             setShowMapModal(true);
                           }}
+                          copy={copy}
+                          language={language}
                         />
                       );
                     })}
@@ -282,17 +321,17 @@ export default function MobileHome({
                       justifyContent: 'center',
                       gap: '8px',
                     }}
-                  >
-                    <MapPinned size={17} strokeWidth={3} />
-                    {showAllOnMap ? 'Show only these 3 picks' : 'Explore full map'}
-                  </button>
-                </motion.section>
-              )}
-            </AnimatePresence>
-          </section>
-        )}
+                    >
+                      <MapPinned size={17} strokeWidth={3} />
+                      {showAllOnMap ? copy.card.showOnlyThree : copy.card.exploreFullMap}
+                    </button>
+                  </motion.section>
+                )}
+              </AnimatePresence>
+            </section>
+          )}
 
-        <SiteFooter compact />
+        <SiteFooter compact copy={copy} />
       </motion.main>
 
       <AnimatePresence>
@@ -303,14 +342,15 @@ export default function MobileHome({
               onToggleFavorite={() => onToggleFavorite(selectedPlace.id, 'detail')}
               onClose={() => onSelectPlace(null)}
               onNavigate={() => onNavigate(selectedPlace, 'detail')}
-              driveText={driveEstimate(selectedPlace, area).value}
+              driveText={driveEstimate(selectedPlace, area, language).value}
               variant="modal"
+              copy={copy}
             />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {showMapModal && mapModalPlace && (
+        {showMapModal && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
@@ -354,7 +394,9 @@ export default function MobileHome({
                 borderBottom: '1px solid rgba(0,0,0,0.06)',
               }}>
                 <div style={{ fontSize: '16px', fontWeight: 900, color: 'var(--charcoal)' }}>
-                  {mapModalPlace.nameEn || mapModalPlace.name}
+                  {isSinglePlaceMap
+                    ? (mapModalPlace.nameEn || mapModalPlace.name)
+                    : copy.card.exploreFullMap}
                 </div>
                 <button
                   onClick={() => setShowMapModal(false)}
@@ -381,9 +423,13 @@ export default function MobileHome({
                 width: '100%',
               }}>
                 <KiddoMap
-                  places={[mapModalPlace]}
-                  selectedPlace={mapModalPlace}
-                  onPinClick={() => {}}
+                  places={isSinglePlaceMap ? [mapModalPlace] : mapPlaces}
+                  selectedPlace={isSinglePlaceMap ? mapModalPlace : selectedPlace}
+                  onPinClick={(place) => {
+                    if (isSinglePlaceMap) return;
+                    setShowMapModal(false);
+                    onSelectPlace(place, 'map_pin');
+                  }}
                 />
               </div>
             </motion.div>
@@ -396,13 +442,8 @@ export default function MobileHome({
           <NavigationSheet
             place={navPlace}
             onClose={onCloseNav}
+            copy={copy}
           />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showTipJar && (
-          <TipJarSheet onClose={onCloseTipJar} />
         )}
       </AnimatePresence>
 

@@ -1,10 +1,12 @@
-import { Coffee } from 'lucide-react';
-import { SITE_NAME, SITE_TAGLINE } from '../../lib/site';
+import { SITE_NAME } from '../../lib/site';
+import { LANGUAGE_OPTIONS } from '../../lib/copy';
 
 export default function HomeHeader({
   favoritesCount = 0,
   onToggleSavedList,
-  onShowTipJar,
+  language = 'zh',
+  copy,
+  onChangeLanguage,
   compact = false,
 }) {
   return (
@@ -43,7 +45,7 @@ export default function HomeHeader({
             {SITE_NAME}
           </div>
           <div style={{ fontSize: compact ? '10px' : '11px', color: '#999', fontWeight: 800 }}>
-            {SITE_TAGLINE}
+            {copy.tagline}
           </div>
         </div>
       </div>
@@ -55,6 +57,39 @@ export default function HomeHeader({
         flexWrap: 'nowrap',
         minWidth: compact ? '176px' : '220px',
       }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          background: 'rgba(255,255,255,0.82)',
+          borderRadius: '999px',
+          padding: '4px',
+          boxShadow: '0 10px 24px rgba(0,0,0,0.06)',
+        }}>
+          {LANGUAGE_OPTIONS.map(option => {
+            const active = option.id === language;
+            return (
+              <button
+                key={option.id}
+                onClick={() => onChangeLanguage(option.id)}
+                className="bouncy-button"
+                style={{
+                  border: 'none',
+                  borderRadius: '999px',
+                  padding: compact ? '7px 10px' : '8px 11px',
+                  background: active ? 'linear-gradient(135deg, #FF8A65, #FFD54F)' : 'transparent',
+                  color: active ? 'white' : '#666',
+                  fontFamily: 'Nunito, sans-serif',
+                  fontSize: compact ? '11px' : '12px',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  minWidth: compact ? '40px' : '44px',
+                }}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
         <button
           onClick={onToggleSavedList}
           className="bouncy-button"
@@ -78,32 +113,7 @@ export default function HomeHeader({
           }}
         >
           <span style={{ fontSize: compact ? '14px' : '16px' }}>🤍</span>
-          Saved {favoritesCount > 0 ? `(${favoritesCount})` : ''}
-        </button>
-        <button
-          onClick={onShowTipJar}
-          className="bouncy-button"
-          style={{
-            border: 'none',
-            borderRadius: '999px',
-            padding: compact ? '9px 12px' : '11px 14px',
-            background: 'linear-gradient(180deg, #fff, #fffef9)',
-            color: 'var(--charcoal)',
-            boxShadow: '0 10px 24px rgba(0,0,0,0.08)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '7px',
-            minWidth: compact ? '92px' : '108px',
-            fontFamily: 'Nunito, sans-serif',
-            fontSize: compact ? '11px' : '12px',
-            fontWeight: 900,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <Coffee size={16} strokeWidth={3} />
-          Support us
+          {copy.saved.button} {favoritesCount > 0 ? `(${favoritesCount})` : ''}
         </button>
       </div>
     </div>

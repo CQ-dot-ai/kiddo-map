@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
 
-export default function NavigationSheet({ place, onClose }) {
+export default function NavigationSheet({ place, onClose, copy }) {
   const [lng, lat] = place.coordinates;
   const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : '';
   const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
@@ -151,14 +150,14 @@ export default function NavigationSheet({ place, onClose }) {
             color: 'var(--charcoal)',
             marginBottom: '4px',
           }}>
-            Pick a map app
+            {copy.nav.title}
           </div>
           <div style={{
             fontSize: '13px',
             color: '#999',
             fontWeight: 500,
           }}>
-            Go to {place.nameEn || place.name}
+            {copy.nav.subtitle} {place.nameEn || place.name}
           </div>
         </div>
 
@@ -196,10 +195,10 @@ export default function NavigationSheet({ place, onClose }) {
             </div>
             <div style={{ flex: 1, textAlign: 'left' }}>
               <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '2px' }}>
-                Google Maps
+                {copy.nav.google}
               </div>
               <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>
-                Easy, familiar, and good for transit too
+                {copy.nav.googleNote}
               </div>
             </div>
             <div style={{ fontSize: '20px' }}>→</div>
@@ -237,10 +236,10 @@ export default function NavigationSheet({ place, onClose }) {
             </div>
             <div style={{ flex: 1, textAlign: 'left' }}>
               <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '2px' }}>
-                Waze
+                {copy.nav.waze}
               </div>
               <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>
-                Live traffic, great for driving in KL
+                {copy.nav.wazeNote}
               </div>
             </div>
             <div style={{ fontSize: '20px' }}>→</div>
@@ -277,10 +276,10 @@ export default function NavigationSheet({ place, onClose }) {
             </div>
             <div style={{ flex: 1, textAlign: 'left' }}>
               <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '2px' }}>
-                Grab
+                {copy.nav.grab}
               </div>
               <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>
-                Open Grab app or book on the web
+                {copy.nav.grabNote}
               </div>
             </div>
             <div style={{ fontSize: '20px' }}>→</div>
@@ -303,7 +302,7 @@ export default function NavigationSheet({ place, onClose }) {
               marginTop: '4px',
             }}
           >
-            Cancel
+            {copy.nav.cancel}
           </button>
         </div>
       </div>

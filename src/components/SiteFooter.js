@@ -1,26 +1,26 @@
 import Link from 'next/link';
+import { getCopy } from '../lib/copy';
 
-const groups = [
-  {
-    title: 'Explore',
-    links: [
-      { href: '/guides/best-indoor-places-kuala-lumpur', label: 'Indoor places in KL' },
-      { href: '/guides/rainy-day-kid-activities-kuala-lumpur', label: 'Rainy day ideas' },
-      { href: '/guides/free-kid-friendly-places-kuala-lumpur', label: 'Free places' },
-    ],
-  },
-  {
-    title: 'About',
-    links: [
-      { href: '/about', label: 'About' },
-      { href: '/contact', label: 'Contact' },
-      { href: '/privacy', label: 'Privacy Policy' },
-      { href: '/terms', label: 'Terms of Use' },
-    ],
-  },
-];
-
-export default function SiteFooter({ compact = false }) {
+export default function SiteFooter({ compact = false, copy = getCopy() }) {
+  const groups = [
+    {
+      title: copy.footer.explore,
+      links: [
+        { href: '/guides/best-indoor-places-kuala-lumpur', label: copy.footer.links.indoor },
+        { href: '/guides/rainy-day-kid-activities-kuala-lumpur', label: copy.footer.links.rainy },
+        { href: '/guides/free-kid-friendly-places-kuala-lumpur', label: copy.footer.links.free },
+      ],
+    },
+    {
+      title: copy.footer.about,
+      links: [
+        { href: '/about', label: copy.footer.links.about },
+        { href: '/contact', label: copy.footer.links.contact },
+        { href: '/privacy', label: copy.footer.links.privacy },
+        { href: '/terms', label: copy.footer.links.terms },
+      ],
+    },
+  ];
   return (
     <footer
       style={{
@@ -33,7 +33,7 @@ export default function SiteFooter({ compact = false }) {
       }}
     >
       <div style={{ fontSize: compact ? '12px' : '13px', lineHeight: 1.5 }}>
-        Kiddomap helps Kuala Lumpur families create easier, happier weekends. We curate kid-friendly places and practical notes so parents can spend less time deciding and more time enjoying the day.
+        {copy.footer.summary}
       </div>
 
       <div

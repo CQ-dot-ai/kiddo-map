@@ -1,5 +1,23 @@
 import { PLACES } from '../data/places';
 
+export const CORE_SEO_PLACE_IDS = [
+  'klcc-park',
+  'zoo-negara',
+  'sunway-lagoon',
+  'aquaria-klcc',
+  'farm-in-the-city',
+  'perdana-botanical-garden',
+  'the-parenthood-sunway',
+  'kidzania',
+  'petrosains',
+  'taman-botani-negara-shah-alam',
+  'islamic-arts-museum',
+  'national-museum',
+  'wetland-studios-putrajaya',
+  'bank-negara-museum-art-gallery',
+  'national-science-centre',
+];
+
 function normalizeLabel(value) {
   return String(value || '')
     .replace(/[·|]/g, ' ')
@@ -13,6 +31,16 @@ export function getPlaceById(id) {
 
 export function getAllPlaceIds() {
   return PLACES.map(place => place.id);
+}
+
+export function getCoreSeoPlaceIds() {
+  return CORE_SEO_PLACE_IDS.filter(id => PLACES.some(place => place.id === id));
+}
+
+export function getCoreSeoPlaces() {
+  return getCoreSeoPlaceIds()
+    .map(id => getPlaceById(id))
+    .filter(Boolean);
 }
 
 export function getTopSeoPlaces(limit = 5) {

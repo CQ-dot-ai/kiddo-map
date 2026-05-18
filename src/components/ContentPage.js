@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import SiteHead from './SiteHead';
 import SiteFooter from './SiteFooter';
+import { getCopy } from '../lib/copy';
 
 export default function ContentPage({
   title,
@@ -10,6 +11,8 @@ export default function ContentPage({
   structuredData,
   children,
   maxWidth = '860px',
+  copy = getCopy(),
+  backLabel = '返回 Kiddomap',
 }) {
   return (
     <>
@@ -19,8 +22,6 @@ export default function ContentPage({
           minHeight: '100dvh',
           background: 'linear-gradient(180deg, #fffaf2 0%, #ffffff 100%)',
           color: '#2b2b2b',
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch',
         }}
       >
         <main
@@ -30,11 +31,10 @@ export default function ContentPage({
             padding: '32px 20px 48px',
             display: 'grid',
             gap: '20px',
-            minHeight: '100dvh',
           }}
         >
           <Link href="/" style={{ color: '#666', textDecoration: 'none', fontWeight: 700, fontSize: '14px' }}>
-            ← Back to Kiddomap
+            ← {backLabel}
           </Link>
           {eyebrow ? (
             <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#ff8a65' }}>
@@ -50,7 +50,7 @@ export default function ContentPage({
           <div style={{ display: 'grid', gap: '18px', fontSize: '16px', lineHeight: 1.7 }}>
             {children}
           </div>
-          <SiteFooter />
+          <SiteFooter copy={copy} />
         </main>
       </div>
     </>

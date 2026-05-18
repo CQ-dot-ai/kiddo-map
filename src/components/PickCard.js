@@ -13,9 +13,11 @@ export default function PickCard({
   onViewMap,
   tweaksOpen = false,
   areaLabel = 'Area',
+  copy,
+  language = 'en',
 }) {
   const isPrimary = variant === 'primary';
-  const reasons = todayReasons(place, area, context);
+  const reasons = todayReasons(place, area, context, language);
 
   return (
     <div style={{
@@ -89,11 +91,11 @@ export default function PickCard({
               fontWeight: 800,
               marginTop: '6px',
             }}>
-              <span>{weatherNote(place)}</span>
+              <span>{weatherNote(place, language)}</span>
               <span>·</span>
-              <span>Age {place.ageMin}-{place.ageMax}</span>
+              <span>{copy.recommendation.ageRange(place.ageMin, place.ageMax)}</span>
               <span>·</span>
-              <span>{place.durationHours}h</span>
+              <span>{copy.recommendation.durationHours(place.durationHours)}</span>
             </div>
           </div>
         </div>
@@ -132,7 +134,7 @@ export default function PickCard({
           fontWeight: 700,
           lineHeight: 1.35,
         }}>
-          <strong style={{ color: 'var(--charcoal)' }}>Drive check:</strong> {reasons[4][2]}
+          <strong style={{ color: 'var(--charcoal)' }}>{copy.card.driveCheck}:</strong> {reasons[4][2]}
         </div>
         <div style={{
           marginTop: '6px',
@@ -141,7 +143,7 @@ export default function PickCard({
           fontWeight: 700,
           lineHeight: 1.35,
         }}>
-          {frictionNote(place)}
+          {frictionNote(place, language)}
         </div>
       </button>
 
@@ -169,7 +171,7 @@ export default function PickCard({
               }}
             >
               <Navigation size={17} strokeWidth={3} />
-              Take me there
+              {copy.card.takeMeThere}
             </button>
             <button
               onClick={onChangeAnswer}
@@ -191,7 +193,7 @@ export default function PickCard({
               }}
             >
               <RefreshCcw size={18} strokeWidth={3} />
-              {tweaksOpen ? 'Hide options' : 'Show me more'}
+              {tweaksOpen ? copy.card.hideOptions : copy.card.showMore}
             </button>
           </div>
         ) : (
@@ -211,7 +213,7 @@ export default function PickCard({
               cursor: 'pointer',
             }}
           >
-            Take this one
+            {copy.card.takeThisOne}
           </button>
         )}
       </div>
@@ -242,12 +244,11 @@ export default function PickCard({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '16px' }}>🗺️</span>
-            <span>{areaLabel}</span>
+            <span>{copy.card.area}</span>
           </div>
-          <span style={{ fontSize: '12px', opacity: 0.7 }}>Tap to explore</span>
+          <span style={{ fontSize: '12px', opacity: 0.7 }}>{copy.card.tapToExplore}</span>
         </button>
       )}
     </div>
   );
 }
-

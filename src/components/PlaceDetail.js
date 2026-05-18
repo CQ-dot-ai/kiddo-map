@@ -2,49 +2,49 @@ import { motion } from 'framer-motion';
 import { X, Heart, Navigation, Clock, Users, DollarSign, MapPin, ExternalLink, Star } from 'lucide-react';
 
 
-function getParentQuote(place) {
-  if (place.facilities.aircon >= 4 && place.indoor) return 'Parents like: cool indoors when KL gets hot.';
-  if (place.facilities.stroller >= 4) return 'Parents like: stroller-friendly paths.';
-  if (place.facilities.restroom >= 4) return 'Parents like: toilets are easy to find.';
-  if (place.facilities.food >= 4) return 'Parents like: food nearby.';
-  return `Parents like: ${place.tagline.toLowerCase()}.`;
+function getParentQuote(place, copy) {
+  if (place.facilities.aircon >= 4 && place.indoor) return `${copy.detail.parentsLike}: cool indoors when KL gets hot.`;
+  if (place.facilities.stroller >= 4) return `${copy.detail.parentsLike}: stroller-friendly paths.`;
+  if (place.facilities.restroom >= 4) return `${copy.detail.parentsLike}: toilets are easy to find.`;
+  if (place.facilities.food >= 4) return `${copy.detail.parentsLike}: food nearby.`;
+  return `${copy.detail.parentsLike}: ${place.tagline.toLowerCase()}.`;
 }
 
-function getTicketGuide(place) {
+function getTicketGuide(place, copy) {
   if (place.cost === 0) {
     return {
-      title: 'No ticket needed',
-      option: 'Just check opening conditions',
-      note: 'Free places are fastest when weather and timing match.',
+      title: copy.detail.noTicketNeeded,
+      option: copy.detail.justCheckConditions,
+      note: copy.detail.freeNote,
       url: null,
     };
   }
   if (place.ticketRequired === false && !place.ticketNote && !place.ticketUrl) {
     return {
-      title: 'Check before you go',
-      option: 'Walk-in usually works',
-      note: 'Some places still change rates or entry rules without much notice.',
+      title: copy.detail.checkBeforeYouGo,
+      option: copy.detail.walkInUsuallyWorks,
+      note: copy.detail.walkInNote,
       url: place.officialUrl || null,
     };
   }
   if (place.ticketRequired || place.ticketNote || place.ticketUrl || place.officialUrl) {
     return {
-      title: place.ticketTitle || 'Buy ticket before you go',
+      title: place.ticketTitle || copy.detail.buyTicketBeforeYouGo,
       option:
         place.ticketOption ||
         (place.ticketChannel === 'official'
-          ? 'Official site first'
+          ? copy.detail.officialSiteFirst
           : place.ticketChannel === 'walk-in'
-            ? 'Walk-in available'
-            : 'Check the official site first'),
-      note: place.ticketNote || 'Check the official site before you go.',
+            ? copy.detail.walkInAvailable
+            : copy.detail.officialSiteFirst),
+      note: place.ticketNote || copy.detail.officialSiteNote,
       url: place.ticketUrl || place.officialUrl || null,
     };
   }
   return {
-    title: 'Check tickets before you go',
-    option: 'Official site first',
-    note: 'If official tickets exist, use them before Klook or Traveloka.',
+    title: copy.detail.genericTicketTitle,
+    option: copy.detail.officialSiteFirst,
+    note: copy.detail.genericTicketNote,
     url: null,
   };
 }
@@ -55,12 +55,14 @@ export default function PlaceDetail({
   onToggleFavorite,
   onClose,
   onNavigate,
-  driveText = 'Pick your start area',
+  driveText,
   variant = 'modal', // 'modal' for mobile, 'sidebar' for desktop
+  copy,
 }) {
-  const parentQuote = getParentQuote(place);
-  const ticket = getTicketGuide(place);
+  const parentQuote = getParentQuote(place, copy);
+  const ticket = getTicketGuide(place, copy);
   const isSidebar = variant === 'sidebar';
+  const resolvedDriveText = driveText || copy.detail.driveUnknown;
 
   return (
     <>
@@ -103,7 +105,7 @@ export default function PlaceDetail({
               <div className="place-pill" style={{ color: place.color.dark }}>
                 {place.emoji} {place.category}
               </div>
-              <button onClick={onClose} className="round-button bouncy-button" aria-label="Close">
+              <button onClick={onClose} className="round-button bouncy-button" aria-label={copy.detail.close}>
                 <X size={18} strokeWidth={3} />
               </button>
             </div>
@@ -117,21 +119,21 @@ export default function PlaceDetail({
           <div className="place-content">
             {/* 1. Should we go? */}
             <div className="decision-card" style={{ borderColor: `${place.color.primary}33` }}>
-              <div className="section-eyebrow" style={{ color: place.color.dark }}>Should we go?</div>
-              <h3>Good choice if you want {place.indoor ? 'a low-weather-risk plan.' : 'fresh air before it gets hot.'}</h3>
+              <div className="section-eyebrow" style={{ color: place.color.dark }}>{copy.detail.shouldWeGo}</div>
+              <h3>{place.indoor ? copy.detail.goodChoiceIndoor : copy.detail.goodChoiceOutdoor}</h3>
               <p>{place.description}</p>
 
               <div className="parent-quote">
                 <Star size={14} fill={place.color.dark} color={place.color.dark} />
                 <span>
-                  <strong>{place.googleRating}</strong> · {place.googleReviewCount > 1000 ? `${(place.googleReviewCount / 1000).toFixed(1)}k` : place.googleReviewCount} reviews — {parentQuote}
+                  <strong>{place.googleRating}</strong> · {place.googleReviewCount > 1000 ? `${(place.googleReviewCount / 1000).toFixed(1)}k` : place.googleReviewCount} {copy.detail.ratingReviews} — {parentQuote}
                 </span>
               </div>
 
               <div className="metric-grid">
-                <InfoChip icon={<DollarSign size={14} />} label="Cost" value={place.costLabel} color={place.color.dark} />
-                <InfoChip icon={<Clock size={14} />} label="Time" value={`${place.durationHours}h`} color={place.color.dark} />
-                <InfoChip icon={<Users size={14} />} label="Age" value={`${place.ageMin}-${place.ageMax}`} color={place.color.dark} />
+                <InfoChip icon={<DollarSign size={14} />} label={copy.card.cost || 'Cost'} value={place.costLabel} color={place.color.dark} />
+                <InfoChip icon={<Clock size={14} />} label={copy.card.time} value={place.durationHours} color={place.color.dark} />
+                <InfoChip icon={<Users size={14} />} label={copy.card.age || 'Age'} value={`${place.ageMin}-${place.ageMax}`} color={place.color.dark} />
               </div>
             </div>
 
@@ -139,8 +141,8 @@ export default function PlaceDetail({
             <div className="drive-card" style={{ background: place.color.light }}>
               <MapPin size={18} color={place.color.dark} />
               <div>
-                <div className="mini-label" style={{ color: place.color.dark }}>Drive check</div>
-                <strong>{driveText}</strong>
+                <div className="mini-label" style={{ color: place.color.dark }}>{copy.card.driveCheck}</div>
+                <strong>{resolvedDriveText}</strong>
                 <span>{place.address}</span>
               </div>
             </div>
@@ -148,7 +150,7 @@ export default function PlaceDetail({
             {/* 3. Before you go */}
             <div className="before-card">
               <div className="before-head">
-                <div className="section-title">Before you go</div>
+                <div className="section-title">{copy.detail.beforeYouGo}</div>
                 <img
                   src={place.image}
                   alt=""
@@ -159,33 +161,33 @@ export default function PlaceDetail({
 <BeforeItem label={ticket.title} value={ticket.option} note={ticket.note} />
 {place.openingHoursNote && (
 <BeforeItem
-label="Opening hours"
+label={copy.detail.openingHours}
 value={place.openingHoursNote}
-note={place.ticketRequired === false ? 'Still worth checking holidays or special closures.' : 'Check the official site on the day you go.'}
+note={place.ticketRequired === false ? copy.detail.justCheckConditions : copy.detail.officialSiteNote}
 />
 )}
 <BeforeItem
-label="Best timing"
+label={copy.detail.bestTiming}
 value={place.bestTimeNote || (place.indoor ? 'Book earlier, go before lunch' : 'Go morning or late afternoon')}
-note={place.indoor ? 'Less queueing, less tired kids.' : 'Better weather and fewer meltdowns.'}
+note={place.indoor ? copy.detail.goodChoiceIndoor : copy.detail.goodChoiceOutdoor}
 />
 {place.watchOutNote && (
 <BeforeItem
-label="Watch out"
+label={copy.detail.watchOut}
 value={place.watchOutNote}
-note="This is the part that helps you avoid surprises."
+note={copy.detail.watchOut}
 />
 )}
 {place.packingTips && place.packingTips.length > 0 && (
 <BeforeItem
-label="What to pack"
+label={copy.detail.whatToPack}
                   value={place.packingTips[0]}
                   note={place.packingTips.length > 1 ? place.packingTips.slice(1).join(' · ') : ''}
                 />
               )}
               {ticket.url && (
                 <a className="ticket-link bouncy-button" href={ticket.url} target="_blank" rel="noreferrer">
-                  Open ticket site
+                  {copy.detail.openTicketSite}
                   <ExternalLink size={15} strokeWidth={3} />
                 </a>
               )}
@@ -194,7 +196,7 @@ label="What to pack"
 
           <div className="bottom-actions">
             <div className="bottom-actions-inner">
-              <button onClick={onToggleFavorite} className="save-button bouncy-button" aria-label="Save place">
+              <button onClick={onToggleFavorite} className="save-button bouncy-button" aria-label={copy.detail.save}>
                 <Heart
                   size={22}
                   fill={isFavorite ? '#FF6B6B' : 'transparent'}
@@ -208,7 +210,7 @@ label="What to pack"
                 style={{ background: `linear-gradient(135deg, ${place.color.primary}, ${place.color.dark})`, boxShadow: `0 8px 20px ${place.color.primary}55` }}
               >
                 <Navigation size={18} strokeWidth={3} />
-                Take me there
+                {copy.detail.takeMeThere}
               </button>
             </div>
           </div>

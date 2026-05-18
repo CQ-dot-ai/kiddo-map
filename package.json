@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "./node_modules/.bin/vitest run --config vitest.config.js src/lib/recommendation.test.js"
+    "test": "./node_modules/.bin/vitest run --config vitest.config.js"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

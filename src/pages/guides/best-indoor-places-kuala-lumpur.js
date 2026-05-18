@@ -1,12 +1,14 @@
 import GuideCollectionPage from '../../components/GuideCollectionPage';
+import { getCopy } from '../../lib/copy';
 import { getGuideCollections } from '../../lib/place-seo';
 import { SITE_URL } from '../../lib/site';
 
 const places = getGuideCollections().indoor;
+const copy = getCopy('zh');
 const itemList = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  name: 'Best Indoor Places for Kids in Kuala Lumpur',
+  name: '吉隆坡适合孩子的室内去处',
   itemListOrder: 'https://schema.org/ItemListOrderAscending',
   numberOfItems: places.length,
   itemListElement: places.map((place, index) => ({
@@ -23,18 +25,18 @@ const faq = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'What counts as an indoor place on Kiddomap?',
+      name: 'Kiddomap 里什么算室内去处？',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'We treat a place as indoor if it is primarily sheltered, weather-safe, or practical for a rainy or hot Kuala Lumpur day.',
+        text: '只要一个地点主要在室内、能避开天气影响，或在吉隆坡炎热和下雨天更适合带孩子去，我们就会把它归进室内去处。',
       },
     },
     {
       '@type': 'Question',
-      name: 'Why are these indoor places recommended here?',
+      name: '为什么推荐这些室内去处？',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'They are chosen for age fit, low weather risk, and a better chance of being an easy family outing rather than a stressful one.',
+        text: '这些地点更重视年龄匹配、天气风险低，以及家长是否能更轻松地成行，不会把简单出门变成一场折腾。',
       },
     },
   ],
@@ -43,33 +45,46 @@ const faq = {
 export default function IndoorGuidePage() {
   return (
     <GuideCollectionPage
-      title="Best Indoor Places for Kids in Kuala Lumpur"
-      description="Rain-safe, air-conditioned, and easy-to-start family places in Kuala Lumpur when parents want a simpler indoor plan."
+      title="吉隆坡适合孩子的室内去处"
+      description="适合天气热或下雨天的室内亲子去处，帮家长更快决定今天要不要出门。"
       path="/guides/best-indoor-places-kuala-lumpur"
-      eyebrow="Guide"
-      introTitle="Indoor places in KL that are worth the drive"
-      introBody="Use this page when you want a family outing that stays sheltered, works on a hot day, and does not require a full weather strategy. Each pick is meant to be easy to scan and easy to trust."
-      introNote="Open a card for the full place page, including age fit, time, drive check, and before-you-go notes."
-      updateNote="Last reviewed: May 13, 2026"
+      eyebrow="专题"
+      introTitle="适合热天和雨天的室内去处"
+      introBody="这页适合想找一个更稳妥的亲子安排时使用：不用太看天气，也不用做太多额外准备。每个地点都尽量回答家长最在意的那几个问题。"
+      introNote="点开地点卡后，可以继续看适合年龄、预计时长、路程参考和出发前提醒。"
+      updateNote="最近检查：2026 年 5 月 13 日"
       relatedLinks={[
-        { href: '/guides/rainy-day-kid-activities-kuala-lumpur', label: 'Rainy day ideas', description: 'The same indoor logic, but optimized for wet weather.' },
-        { href: '/guides/free-kid-friendly-places-kuala-lumpur', label: 'Free places', description: 'Indoor and outdoor options that do not need a big budget.' },
+        { href: '/guides/rainy-day-kid-activities-kuala-lumpur', label: '雨天去处', description: '更适合下雨天临时决定出门的选择。' },
+        { href: '/guides/free-kid-friendly-places-kuala-lumpur', label: '免费去处', description: '更适合预算有限时参考的地点。' },
       ]}
       faqItems={[
         {
-          question: 'What kind of places are included on this page?',
-          answer: 'Mostly sheltered or weather-safe family places that make sense when Kuala Lumpur is hot, humid, or rainy.',
+          question: '这页会收哪些地点？',
+          answer: '主要是有遮蔽、天气影响较低，或在吉隆坡炎热和下雨时仍然适合亲子出行的地点。',
         },
         {
-          question: 'How do you decide what ranks here?',
-          answer: 'We look at indoor fit, age fit, time needed, parent effort, and whether the outing feels easy enough to start without overthinking.',
+          question: '这些地点是怎么被挑出来的？',
+          answer: '我们会看它是否真的适合室内安排、适合什么年龄、要花多久，以及家长会不会太累、能不能轻松成行。',
         },
       ]}
+      copy={copy}
+      locale="zh"
+      uiText={{
+        keyPlaces: '这页重点地点',
+        relatedGuides: '相关专题',
+        faq: '常见问题',
+        age: '年龄',
+        time: '时长',
+        cost: '花费',
+        quickNote: '快速判断',
+        quickNoteFallback: '帮助家长更快判断这里值不值得去。',
+        openFullPlacePage: '打开完整地点页',
+      }}
       structuredData={[
         {
           '@context': 'https://schema.org',
           '@type': 'Article',
-          headline: 'Best Indoor Places for Kids in Kuala Lumpur',
+          headline: '吉隆坡适合孩子的室内去处',
           url: `${SITE_URL}/guides/best-indoor-places-kuala-lumpur`,
         },
         itemList,

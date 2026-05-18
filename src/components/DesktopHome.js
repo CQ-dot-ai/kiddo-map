@@ -5,7 +5,6 @@ import PlaceDetail from './PlaceDetail';
 import SiteFooter from './SiteFooter';
 import PickCard from './PickCard';
 import NavigationSheet from './NavigationSheet';
-import TipJarSheet from './TipJarSheet';
 import HomeHeader from './home/HomeHeader';
 import SavedListPanel from './home/SavedListPanel';
 import { getBackupContrastReason, AREA_COORDS, driveEstimate } from '../lib/recommendation';
@@ -23,9 +22,6 @@ export default function DesktopHome({
   onNavigate,
   navPlace,
   onCloseNav,
-  showTipJar,
-  onShowTipJar,
-  onCloseTipJar,
   showInstallHint,
   onCloseInstallHint,
   showSavedList,
@@ -44,6 +40,9 @@ export default function DesktopHome({
   backupPicks,
   mapPlaces,
   allPlaces,
+  language,
+  copy,
+  onChangeLanguage,
 }) {
   return (
     <div style={{
@@ -78,13 +77,16 @@ export default function DesktopHome({
               compact={false}
               favoritesCount={favorites.length}
               onToggleSavedList={onToggleSavedList}
-              onShowTipJar={() => onShowTipJar('header')}
+              language={language}
+              copy={copy}
+              onChangeLanguage={onChangeLanguage}
             />
 
           {showSavedList && (
               <SavedListPanel
                 favorites={favorites}
                 places={allPlaces}
+                copy={copy}
                 onClose={onCloseSavedList}
                 onSelectPlace={(place) => onSelectPlace(place, 'saved_list')}
               />
@@ -99,7 +101,7 @@ export default function DesktopHome({
               color: 'var(--charcoal)',
               letterSpacing: 0,
             }}>
-              Decide where to take your kid in 3 minutes.
+              {copy.headline}
             </h1>
           </section>
 
@@ -107,7 +109,7 @@ export default function DesktopHome({
             <section style={{ display: 'grid', gap: '12px' }}>
                 <PickCard
                   place={mainPick}
-                  rank="Best pick right now"
+                  rank={copy.card.bestPick}
                   area={area}
                   context={context}
                   areaLabel={AREA_COORDS[area]?.label || 'Area'}
@@ -115,6 +117,8 @@ export default function DesktopHome({
                   onDetails={() => onSelectPlace(mainPick, 'main_pick')}
                   onNavigate={() => onNavigate(mainPick, 'main_pick')}
                   onChangeAnswer={onToggleTweaks}
+                  copy={copy}
+                  language={language}
                 />
 
               <AnimatePresence initial={false}>
@@ -135,30 +139,30 @@ export default function DesktopHome({
                     }}
                   >
                     {[
-                      ['Kid age', age, onSetAge, [
-                        { id: 'any', label: 'Any age' },
-                        { id: 'baby', label: '0-3' },
-                        { id: 'little', label: '4-7' },
-                        { id: 'big', label: '8+' },
+                      [copy.filters.age, age, onSetAge, [
+                        { id: 'any', label: copy.filters.ageOptions.any },
+                        { id: 'baby', label: copy.filters.ageOptions.baby },
+                        { id: 'little', label: copy.filters.ageOptions.little },
+                        { id: 'big', label: copy.filters.ageOptions.big },
                       ]],
-                      ['Starting area', area, onSetArea, [
-                        { id: 'any', label: 'Anywhere' },
-                        { id: 'klcc', label: 'KLCC' },
-                        { id: 'pj', label: 'PJ' },
-                        { id: 'mont-kiara', label: 'Mont Kiara' },
-                        { id: 'bangsar', label: 'Bangsar' },
+                      [copy.filters.area, area, onSetArea, [
+                        { id: 'any', label: copy.filters.areaOptions.any },
+                        { id: 'klcc', label: copy.filters.areaOptions.klcc },
+                        { id: 'pj', label: copy.filters.areaOptions.pj },
+                        { id: 'mont-kiara', label: copy.filters.areaOptions['mont-kiara'] },
+                        { id: 'bangsar', label: copy.filters.areaOptions.bangsar },
                       ]],
-                      ['Time today', time, onSetTime, [
-                        { id: 'any', label: 'Any time' },
-                        { id: 'quick', label: '1-2h' },
-                        { id: 'easy', label: '2-3h' },
-                        { id: 'half-day', label: 'Half day' },
+                      [copy.filters.time, time, onSetTime, [
+                        { id: 'any', label: copy.filters.timeOptions.any },
+                        { id: 'quick', label: copy.filters.timeOptions.quick },
+                        { id: 'easy', label: copy.filters.timeOptions.easy },
+                        { id: 'half-day', label: copy.filters.timeOptions['half-day'] },
                       ]],
-                      ["Today's energy", energy, onSetEnergy, [
-                        { id: 'any', label: 'Best answer' },
-                        { id: 'indoor', label: 'Rain-safe' },
-                        { id: 'outdoor', label: 'Outdoor' },
-                        { id: 'budget', label: 'Budget' },
+                      [copy.filters.energy, energy, onSetEnergy, [
+                        { id: 'any', label: copy.filters.energyOptions.any },
+                        { id: 'indoor', label: copy.filters.energyOptions.indoor },
+                        { id: 'outdoor', label: copy.filters.energyOptions.outdoor },
+                        { id: 'budget', label: copy.filters.energyOptions.budget },
                       ]],
                     ].map(([label, value, setter, items]) => (
                       <div key={label} style={{ display: 'grid', gap: '6px' }}>
@@ -209,15 +213,15 @@ export default function DesktopHome({
                         cursor: 'pointer',
                       }}
                     >
-                      Show me another good spot
+                      {copy.card.showAnother}
                     </button>
 
                     <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
                       <div style={{ fontSize: '12px', fontWeight: 900, color: '#999', textTransform: 'uppercase' }}>
-                        Two backup picks
+                        {copy.card.backupPicks}
                       </div>
                       {backupPicks.map((place) => {
-                        const contrastReason = getBackupContrastReason(mainPick, place);
+                        const contrastReason = getBackupContrastReason(mainPick, place, language);
                         return (
                           <PickCard
                             key={place.id}
@@ -229,6 +233,8 @@ export default function DesktopHome({
                             areaLabel={AREA_COORDS[area]?.label || 'Area'}
                             onDetails={() => onSelectPlace(place, 'backup_pick')}
                             onNavigate={() => onNavigate(place, 'backup_pick')}
+                            copy={copy}
+                            language={language}
                           />
                         );
                       })}
@@ -255,7 +261,7 @@ export default function DesktopHome({
                       }}
                     >
                       <MapPinned size={17} strokeWidth={3} />
-                      {showAllOnMap ? 'Show only these 3 picks' : 'Explore full map'}
+                      {showAllOnMap ? copy.card.showOnlyThree : copy.card.exploreFullMap}
                     </button>
                   </motion.section>
                 )}
@@ -263,7 +269,7 @@ export default function DesktopHome({
             </section>
           )}
 
-          <SiteFooter compact />
+          <SiteFooter compact copy={copy} />
         </motion.main>
 
         <aside style={{
@@ -275,37 +281,6 @@ export default function DesktopHome({
               selectedPlace={selectedPlace}
               onPinClick={(place) => onSelectPlace(place, 'map_pin')}
             />
-          <div style={{
-            position: 'absolute',
-            top: '18px',
-            left: '18px',
-            zIndex: 6,
-            background: 'rgba(255,255,255,0.9)',
-            borderRadius: '18px',
-            padding: '12px 14px',
-            boxShadow: '0 8px 24px rgba(34,34,34,0.12)',
-            maxWidth: '260px',
-            pointerEvents: 'none',
-          }}>
-            <div style={{
-              fontFamily: 'Fredoka, sans-serif',
-              fontSize: '16px',
-              fontWeight: 800,
-              color: 'var(--charcoal)',
-              marginBottom: '4px',
-            }}>
-              Map is optional
-            </div>
-            <div style={{
-              fontSize: '12px',
-              lineHeight: 1.35,
-              fontWeight: 800,
-              color: '#777',
-            }}>
-              Showing {showAllOnMap ? 'all matching places' : 'the main pick and 2 backups'}.
-            </div>
-          </div>
-
           {selectedPlace && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -330,8 +305,9 @@ export default function DesktopHome({
                 onToggleFavorite={() => onToggleFavorite(selectedPlace.id, 'detail')}
                 onClose={() => onSelectPlace(null)}
                 onNavigate={() => onNavigate(selectedPlace, 'detail')}
-                driveText={driveEstimate(selectedPlace, area).value}
+                driveText={driveEstimate(selectedPlace, area, language).value}
                 variant="sidebar"
+                copy={copy}
               />
             </motion.div>
           )}
@@ -395,13 +371,8 @@ export default function DesktopHome({
             <NavigationSheet
               place={navPlace}
               onClose={onCloseNav}
+              copy={copy}
             />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showTipJar && (
-            <TipJarSheet onClose={onCloseTipJar} />
           )}
         </AnimatePresence>
       </div>

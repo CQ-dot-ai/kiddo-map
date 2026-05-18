@@ -6,17 +6,17 @@ export default function AboutPage() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'AboutPage',
-    name: 'About Kiddomap',
+    name: '关于 Kiddomap',
     url: `${SITE_URL}/about`,
-    description: 'Why Kiddomap exists and how it helps Kuala Lumpur families create easier, happier weekends.',
+    description: 'Kiddomap 的定位、适用人群与推荐方式说明。',
   };
 
   return (
     <ContentPage
-      title="About Kiddomap"
-      description="A short overview of Kiddomap, who it is for, and how the recommendations are put together."
+      title="关于 Kiddomap"
+      description="Kiddomap 的定位、适用人群与推荐方式说明。"
       path="/about"
-      eyebrow="About"
+      eyebrow="关于"
       structuredData={structuredData}
     >
       <section style={{
@@ -28,13 +28,13 @@ export default function AboutPage() {
         gap: '10px',
       }}>
         <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#ff8a65' }}>
-          What Kiddomap is
+          Kiddomap 是什么
         </div>
         <div style={{ fontSize: '16px', lineHeight: 1.7, fontWeight: 700, color: '#4d4d4d' }}>
-          Kiddomap helps Kuala Lumpur families create easier, happier weekends. It curates kid-friendly places and practical notes so parents can spend less time deciding and more time enjoying the day.
+          Kiddomap 帮助吉隆坡家庭更快决定亲子出行地点。我们整理亲子友好去处和实用信息，让家长少一点纠结，多一点亲子时光。
         </div>
         <div style={{ fontSize: '12px', lineHeight: 1.45, color: '#8b8b8b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-          Last reviewed: May 13, 2026
+          最近审核：2026 年 5 月 13 日
         </div>
       </section>
 
@@ -44,23 +44,23 @@ export default function AboutPage() {
         paddingTop: '4px',
       }}>
         <AboutBlock
-          title="How we work"
-          body="We look at age fit, indoor or outdoor fit, time needed, parent effort, and practical notes. The result is meant to be useful at decision time, not just nice to browse."
+          title="我们怎么做推荐"
+          body="我们会综合年龄匹配、室内/户外属性、预计时长、家长体力成本和出行实用信息。目标是帮助你在当下做决定，而不只是增加浏览信息。"
         />
         <AboutBlock
-          title="What it is not"
-          body="Kiddomap is not an official venue source. Hours, ticket rules, and on-the-ground conditions can change. Always double-check before you leave."
+          title="它不是什么"
+          body="Kiddomap 不是官方场馆信息源。开放时间、票务规则和现场情况可能会变动。出发前请以场馆官方信息为准。"
         />
         <AboutBlock
-          title="How we improve"
-          body="Recommendations come from place data, family-fit heuristics, and editorial review. If a detail is wrong or outdated, we want to hear about it."
+          title="我们如何持续改进"
+          body="推荐来自地点数据、家庭匹配规则和人工审核。如果你发现信息有误或过期，欢迎反馈，我们会尽快修正。"
         />
         <AboutBlock
-          title="Talk to us"
+          title="联系我们"
           body={
             <>
-              Use the contact page or the in-product feedback flow if you spot a broken detail, want to suggest a place, or want to share a better family note.{' '}
-              <Link href="/contact" style={{ color: '#ff8a65', fontWeight: 900, textDecoration: 'none' }}>Contact Kiddomap</Link>
+              如发现信息错误、想推荐地点，或希望补充更好的家庭出行建议，请使用联系我们页面或产品内反馈入口。{' '}
+              <Link href="/contact" style={{ color: '#ff8a65', fontWeight: 900, textDecoration: 'none' }}>前往联系我们</Link>
             </>
           }
         />
